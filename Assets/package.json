@@ -1,0 +1,16 @@
+{
+    "name": "com.dot.ui",
+    "version": "0.0.1",
+    "displayName": "Dot UI",
+    "description": "Dot UI",
+    "unity": "2023.1",
+    "dependencies": {
+    },
+    "keywords": [
+    ],
+    "author": {
+        "name": "liyubin",
+        "email": "liyubin724@163.com",
+        "url": "https://www.liyubin.com"
+    }
+}
