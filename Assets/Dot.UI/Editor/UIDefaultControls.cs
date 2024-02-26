@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace DotEditor.UI
 {
-    public static class UGUIExtensionDefaultControls
+    public static class UIDefaultControls
     {
         public struct Resources
         {

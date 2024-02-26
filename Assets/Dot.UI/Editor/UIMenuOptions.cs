@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace DotEditor.UI
 {
-    static internal class UGUIExtentMenuOptions
+    static internal class UIMenuOptions
     {
         private const string kUILayerName = "UI";
         private const int kUIScreenWith = 1920;
@@ -31,9 +31,9 @@ namespace DotEditor.UI
         };
         private static readonly string kDefalutLayerName = "Default Layer";
 
-        static private UGUIExtensionDefaultControls.Resources s_StandardResources;
+        static private UIDefaultControls.Resources s_StandardResources;
 
-        static private UGUIExtensionDefaultControls.Resources GetStandardResources()
+        static private UIDefaultControls.Resources GetStandardResources()
         {
             if (s_StandardResources.standard == null)
             {
@@ -69,42 +69,42 @@ namespace DotEditor.UI
         [MenuItem("GameObject/UI/Clear Image", false, 1000)]
         static public void AddClearImage(MenuCommand menuCommand)
         {
-            GameObject go = UGUIExtensionDefaultControls.CreateClearImage(GetStandardResources());
+            GameObject go = UIDefaultControls.CreateClearImage(GetStandardResources());
             PlaceUIElementRoot(go, menuCommand);
         }
 
         [MenuItem("GameObject/UI/Atlas Image", false, 1000)]
         static public void AddAtlasImage(MenuCommand menuCommand)
         {
-            GameObject go = UGUIExtensionDefaultControls.CreateAtlasImage(GetStandardResources());
+            GameObject go = UIDefaultControls.CreateAtlasImage(GetStandardResources());
             PlaceUIElementRoot(go, menuCommand);
         }
 
         [MenuItem("GameObject/UI/Web Image", false, 1000)]
         static public void AddWebImage(MenuCommand menuCommand)
         {
-            GameObject go = UGUIExtensionDefaultControls.CreateWebImage(GetStandardResources());
+            GameObject go = UIDefaultControls.CreateWebImage(GetStandardResources());
             PlaceUIElementRoot(go, menuCommand);
         }
 
         [MenuItem("GameObject/UI/Dynamic Atlas Image", false, 1001)]
         static public void AddDynamicAtlasImage(MenuCommand menuCommand)
         {
-            GameObject go = UGUIExtensionDefaultControls.CreateDynamicAtlasImage(GetStandardResources());
+            GameObject go = UIDefaultControls.CreateDynamicAtlasImage(GetStandardResources());
             PlaceUIElementRoot(go, menuCommand);
         }
 
         [MenuItem("GameObject/UI/Atlas Image Animation", false, 1002)]
         static public void AddAtlasImageAnimation(MenuCommand menuCommand)
         {
-            GameObject go = UGUIExtensionDefaultControls.CreateAtlasImageAnimation(GetStandardResources());
+            GameObject go = UIDefaultControls.CreateAtlasImageAnimation(GetStandardResources());
             PlaceUIElementRoot(go, menuCommand);
         }
 
         [MenuItem("GameObject/UI/Transparent Button", false, 1003)]
         static public void AddTransparentButton(MenuCommand menuCommand)
         {
-            GameObject go = UGUIExtensionDefaultControls.CreateTransparentButton(GetStandardResources());
+            GameObject go = UIDefaultControls.CreateTransparentButton(GetStandardResources());
             PlaceUIElementRoot(go, menuCommand);
         }
 #if ENABLE_LUA
@@ -356,7 +356,7 @@ namespace DotEditor.UI
                 return canvas.gameObject;
 
             // No canvas in the scene at all? Then create a new one.
-            return UGUIExtentMenuOptions.CreateNewUI();
+            return UIMenuOptions.CreateNewUI();
         }
     }
 }
