@@ -1,3 +1,16 @@
 {
-	"name": "DotEngine.UI"
+    "name": "DotEngine.UI",
+    "rootNamespace": "",
+    "references": [
+        "GUID:46d6865c65c4da24ab0f47406b803dc6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
