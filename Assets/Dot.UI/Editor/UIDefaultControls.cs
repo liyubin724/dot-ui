@@ -1,7 +1,12 @@
+using DotEngine.Core.Extensions;
 using DotEngine.UI;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
+using UnityObject = UnityEngine.Object;
 
 namespace DotEditor.UI
 {
@@ -18,6 +23,12 @@ namespace DotEditor.UI
             public Sprite mask;
         }
 
+        public const string kUILayerName = "UI";
+        public const string kUIRootName = "UI Root";
+        public const string kEventSystemName = "EventSystem";
+        public const string kUICameraName = "UI Camera";
+        public const string kUIHierarchyName = "UI Hierarchy";
+
         private const float kWidth = 160f;
         private const float kThickHeight = 30f;
         private const float kThinHeight = 20f;
@@ -28,6 +39,121 @@ namespace DotEditor.UI
         private static Color s_PanelColor = new Color(1f, 1f, 1f, 0.392f);
         private static Color s_TextColor = new Color(50f / 255f, 50f / 255f, 50f / 255f, 1f);
 
+        public static UIRoot CreateUIRoot(string name, int layer)
+        {
+            var root = UnityObject.FindObjectOfType<UIRoot>();
+            if (root != null)
+            {
+                return root;
+            }
+
+            var rootGo = CreateUIObject(name, null);
+            rootGo.layer = layer;
+            root = rootGo.AddComponent<UIRoot>();
+            Undo.RegisterCreatedObjectUndo(rootGo, "Create " + rootGo.name);
+
+            var eventSystem = CreateEventSystem(rootGo);
+            root.eventSystem = eventSystem;
+
+            return root;
+        }
+
+        public static UIRoot CreateUIRoot()
+        {
+            return CreateUIRoot(kUIRootName, LayerMask.NameToLayer(kUILayerName));
+        }
+
+        public static UIHierarchy CreateUIHierarchy(string name)
+        {
+            UIRoot root = CreateUIRoot();
+            var hierarchyTransform = root.transform.FindChildByName(name, false);
+            if (hierarchyTransform == null)
+            {
+                var hierarchyGo = CreateUIObject(name, root.gameObject);
+                hierarchyTransform = hierarchyGo.transform;
+            }
+
+            var hierarchy = hierarchyTransform.GetComponent<UIHierarchy>();
+            if (hierarchy == null)
+            {
+                hierarchy = hierarchyTransform.gameObject.AddComponent<UIHierarchy>();
+            }
+
+            var hierarchyCanvas = hierarchy.GetComponent<Canvas>();
+            if (hierarchyCanvas == null)
+            {
+                hierarchyCanvas = hierarchy.gameObject.AddComponent<Canvas>();
+                hierarchyCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+            }
+            hierarchy.canvas = hierarchyCanvas;
+
+        }
+
+        public static GameObject CreateUIObject(string name, GameObject parent)
+        {
+            GameObject go = new GameObject(name);
+            go.AddComponent<RectTransform>();
+            SetParentAndAlign(go, parent);
+            return go;
+        }
+
+        private static void SetParentAndAlign(GameObject child, GameObject parent)
+        {
+            if (parent == null)
+                return;
+
+            child.transform.SetParent(parent.transform, false);
+            child.SetLayer(child.layer, true);
+        }
+
+        private static EventSystem CreateEventSystem(GameObject parent = null)
+        {
+            var evtSystem = UnityObject.FindObjectOfType<EventSystem>();
+            if (evtSystem == null)
+            {
+                var evtSystemGo = new GameObject(kEventSystemName);
+                evtSystem = evtSystemGo.AddComponent<EventSystem>();
+                evtSystemGo.AddComponent<StandaloneInputModule>();
+
+                if (parent != null)
+                {
+                    evtSystemGo.transform.SetParent()
+                }
+
+                Undo.RegisterCreatedObjectUndo(evtSystemGo, "Create " + evtSystemGo.name);
+            }
+
+            return evtSystem;
+        }
+
+        private static Camera CreateUICamera(GameObject parent)
+        {
+            var uiCamera = parent.transform.FindComponentInChild<Camera>(false);
+            if (uiCamera == null)
+            {
+                var uiCameraGO = new GameObject(kUICameraName);
+                uiCameraGO.transform.SetParent(parent.transform, false);
+                uiCameraGO.layer = parent.layer;
+
+                uiCamera = uiCameraGO.AddComponent<Camera>();
+                uiCamera.clearFlags = CameraClearFlags.Depth;
+                uiCamera.cullingMask = 1 << parent.layer;
+                uiCamera.orthographic = true;
+                uiCamera.depth = 100;
+            }
+
+            return uiCamera;
+        }
+
+        //private static GameObject CreateUIElement(string name, Vector2 size)
+        //{
+        //    GameObject child = new GameObject(name);
+        //    RectTransform rectTransform = child.AddComponent<RectTransform>();
+        //    rectTransform.sizeDelta = size;
+        //    return child;
+        //}
+
+        //----------------------------------------------//
         // Helper methods at top
 
         private static GameObject CreateUIElementRoot(string name, Vector2 size)
@@ -38,13 +164,7 @@ namespace DotEditor.UI
             return child;
         }
 
-        static GameObject CreateUIObject(string name, GameObject parent)
-        {
-            GameObject go = new GameObject(name);
-            go.AddComponent<RectTransform>();
-            SetParentAndAlign(go, parent);
-            return go;
-        }
+
 
         private static void SetDefaultTextValues(Text lbl)
         {
@@ -63,14 +183,7 @@ namespace DotEditor.UI
             colors.disabledColor = new Color(0.521f, 0.521f, 0.521f);
         }
 
-        private static void SetParentAndAlign(GameObject child, GameObject parent)
-        {
-            if (parent == null)
-                return;
 
-            child.transform.SetParent(parent.transform, false);
-            SetLayerRecursively(child, parent.layer);
-        }
 
         private static void SetLayerRecursively(GameObject go, int layer)
         {
