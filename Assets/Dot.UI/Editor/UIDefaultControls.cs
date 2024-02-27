@@ -1,5 +1,6 @@
 using DotEngine.Core.Extensions;
 using DotEngine.UI;
+using System;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -23,11 +24,15 @@ namespace DotEditor.UI
             public Sprite mask;
         }
 
-        public const string kUILayerName = "UI";
+        public const string kLayerName = "UI";
         public const string kUIRootName = "UI Root";
         public const string kEventSystemName = "EventSystem";
         public const string kUICameraName = "UI Camera";
         public const string kUIHierarchyName = "UI Hierarchy";
+        public const string kUILayerName = "UI Layer";
+
+        private const int kUIScreenWith = 1920;
+        private const int kUIScreenHeight = 1080;
 
         private const float kWidth = 160f;
         private const float kThickHeight = 30f;
@@ -47,7 +52,7 @@ namespace DotEditor.UI
                 return root;
             }
 
-            var rootGo = CreateUIObject(name, null);
+            var rootGo = new GameObject(name);
             rootGo.layer = layer;
             root = rootGo.AddComponent<UIRoot>();
             Undo.RegisterCreatedObjectUndo(rootGo, "Create " + rootGo.name);
@@ -60,140 +65,98 @@ namespace DotEditor.UI
 
         public static UIRoot CreateUIRoot()
         {
-            return CreateUIRoot(kUIRootName, LayerMask.NameToLayer(kUILayerName));
+            return CreateUIRoot(kUIRootName, LayerMask.NameToLayer(kLayerName));
         }
 
-        public static UIHierarchy CreateUIHierarchy(string name)
+        public static UIHierarchy CreateUIHierarchy(string name, bool isDefault = false)
         {
-            UIRoot root = CreateUIRoot();
-            var hierarchyTransform = root.transform.FindChildByName(name, false);
-            if (hierarchyTransform == null)
-            {
-                var hierarchyGo = CreateUIObject(name, root.gameObject);
-                hierarchyTransform = hierarchyGo.transform;
-            }
+            var root = CreateUIRoot();
 
-            var hierarchy = hierarchyTransform.GetComponent<UIHierarchy>();
-            if (hierarchy == null)
-            {
-                hierarchy = hierarchyTransform.gameObject.AddComponent<UIHierarchy>();
-            }
+            var hierarchyGo = CreateUIObject(name, root.gameObject, typeof(UIHierarchy));
+            var hierarchy = hierarchyGo.GetComponent<UIHierarchy>();
 
-            var hierarchyCanvas = hierarchy.GetComponent<Canvas>();
-            if (hierarchyCanvas == null)
-            {
-                hierarchyCanvas = hierarchy.gameObject.AddComponent<Canvas>();
-                hierarchyCanvas.renderMode = RenderMode.ScreenSpaceCamera;
-            }
+            var hierarchyCanvas = hierarchyGo.GetComponent<Canvas>();
+            hierarchyCanvas.renderMode = RenderMode.ScreenSpaceCamera;
             hierarchy.canvas = hierarchyCanvas;
 
-        }
+            var canvasScaler = hierarchyGo.GetComponent<CanvasScaler>();
+            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+            canvasScaler.referenceResolution = new Vector2(kUIScreenWith, kUIScreenHeight);
 
-        public static GameObject CreateUIObject(string name, GameObject parent)
-        {
-            GameObject go = new GameObject(name);
-            go.AddComponent<RectTransform>();
-            SetParentAndAlign(go, parent);
-            return go;
-        }
+            var uiCamera = CreateUICamera(hierarchyGo);
+            hierarchy.uiCamera = uiCamera;
+            hierarchyCanvas.worldCamera = uiCamera;
 
-        private static void SetParentAndAlign(GameObject child, GameObject parent)
-        {
-            if (parent == null)
-                return;
-
-            child.transform.SetParent(parent.transform, false);
-            child.SetLayer(child.layer, true);
-        }
-
-        private static EventSystem CreateEventSystem(GameObject parent = null)
-        {
-            var evtSystem = UnityObject.FindObjectOfType<EventSystem>();
-            if (evtSystem == null)
+            var data = new UIHierarchyData()
             {
-                var evtSystemGo = new GameObject(kEventSystemName);
-                evtSystem = evtSystemGo.AddComponent<EventSystem>();
-                evtSystemGo.AddComponent<StandaloneInputModule>();
+                name = name,
+                isDefault = isDefault,
+                hierarchy = hierarchy,
+            };
 
-                if (parent != null)
-                {
-                    evtSystemGo.transform.SetParent()
-                }
+            root.hierarchies ??= new UIHierarchyData[0];
+            ArrayUtility.Add(ref root.hierarchies, data);
 
-                Undo.RegisterCreatedObjectUndo(evtSystemGo, "Create " + evtSystemGo.name);
-            }
+            Undo.RegisterCreatedObjectUndo(hierarchyGo, "Create " + hierarchyGo.name);
 
-            return evtSystem;
+            return hierarchy;
         }
 
-        private static Camera CreateUICamera(GameObject parent)
+        public static UIHierarchy CreateUIHierarchy(bool isDefault = false)
         {
-            var uiCamera = parent.transform.FindComponentInChild<Camera>(false);
-            if (uiCamera == null)
+            return CreateUIHierarchy(kUIHierarchyName, isDefault);
+        }
+
+        public static UIHierarchy FindUIHierarchy(bool createIfNot = true)
+        {
+            UIRoot root = CreateUIRoot();
+
+            UIHierarchy hierarchy = root.transform.FindComponentInChild<UIHierarchy>(false) ?? CreateUIHierarchy();
+
+            return hierarchy;
+        }
+
+        public static UILayer CreateUILayer(string name)
+        {
+            UIRoot root = CreateUIRoot();
+
+            UIHierarchy hierarchy = root.transform.FindComponentInChild<UIHierarchy>(false) ?? CreateUIHierarchy();
+            var hierarchyGo = hierarchy.gameObject;
+            var layerGo = CreateUIObject(name, hierarchyGo, typeof(UILayer));
+            var layer = layerGo.GetComponent<UILayer>();
+            var layerTransform = layerGo.transform as RectTransform;
+            layerTransform.SetStretchAnchorAll();
+            layer.cachedGameObject = layerGo;
+            layer.cachedTransform = layerTransform;
+
+            var data = new UILayerData()
             {
-                var uiCameraGO = new GameObject(kUICameraName);
-                uiCameraGO.transform.SetParent(parent.transform, false);
-                uiCameraGO.layer = parent.layer;
+                name = name,
+                layer = layer,
+            };
 
-                uiCamera = uiCameraGO.AddComponent<Camera>();
-                uiCamera.clearFlags = CameraClearFlags.Depth;
-                uiCamera.cullingMask = 1 << parent.layer;
-                uiCamera.orthographic = true;
-                uiCamera.depth = 100;
-            }
+            hierarchy.layers ??= new UILayerData[0];
+            ArrayUtility.Add(ref hierarchy.layers, data);
 
-            return uiCamera;
+            Undo.RegisterCreatedObjectUndo(layerGo, "Create " + layerGo.name);
+
+            return layer;
         }
 
-        //private static GameObject CreateUIElement(string name, Vector2 size)
-        //{
-        //    GameObject child = new GameObject(name);
-        //    RectTransform rectTransform = child.AddComponent<RectTransform>();
-        //    rectTransform.sizeDelta = size;
-        //    return child;
-        //}
-
-        //----------------------------------------------//
-        // Helper methods at top
-
-        private static GameObject CreateUIElementRoot(string name, Vector2 size)
+        public static UILayer CreateUILayer()
         {
-            GameObject child = new GameObject(name);
-            RectTransform rectTransform = child.AddComponent<RectTransform>();
-            rectTransform.sizeDelta = size;
-            return child;
+            return CreateUILayer(kUILayerName);
         }
 
-
-
-        private static void SetDefaultTextValues(Text lbl)
+        public static UILayer FindUILayer(bool createIfNot = true)
         {
-            lbl.color = s_TextColor;
-
-            System.Type textType = lbl.GetType();
-            MethodInfo mi = textType.GetMethod("AssignDefaultFont", BindingFlags.NonPublic | BindingFlags.Instance);
-            mi.Invoke(lbl, new System.Object[] { });
+            UIHierarchy hierarchy = FindUIHierarchy(true);
+            UILayer layer = hierarchy.transform.FindComponentInChild<UILayer>(false) ?? CreateUILayer();
+            return layer;
         }
 
-        private static void SetDefaultColorTransitionValues(Selectable slider)
-        {
-            ColorBlock colors = slider.colors;
-            colors.highlightedColor = new Color(0.882f, 0.882f, 0.882f);
-            colors.pressedColor = new Color(0.698f, 0.698f, 0.698f);
-            colors.disabledColor = new Color(0.521f, 0.521f, 0.521f);
-        }
-
-
-
-        private static void SetLayerRecursively(GameObject go, int layer)
-        {
-            go.layer = layer;
-            Transform t = go.transform;
-            for (int i = 0; i < t.childCount; i++)
-                SetLayerRecursively(t.GetChild(i).gameObject, layer);
-        }
-
-        public static GameObject CreateAtlasImage(Resources resources)
+        public static GameObject CreateUIAtlasImage(Resources resources)
         {
             GameObject go = CreateUIElementRoot("AtlasImage", s_ImageElementSize);
             go.AddComponent<UIAtlasImage>();
@@ -240,6 +203,179 @@ namespace DotEditor.UI
 
             return go;
         }
+
+        public static GameObject CreateUIObject(string name, GameObject parent, params Type[] componentTypes)
+        {
+            GameObject go = new GameObject(name);
+            go.AddComponent<RectTransform>();
+            SetParentAndAlign(go, parent);
+
+            if (componentTypes != null && componentTypes.Length > 0)
+            {
+                foreach (Type componentType in componentTypes)
+                {
+                    go.AddComponent(componentType);
+                }
+            }
+
+            return go;
+        }
+
+        private static void SetParentAndAlign(GameObject child, GameObject parent)
+        {
+            if (parent == null)
+                return;
+
+            child.transform.SetParent(parent.transform, false);
+            child.SetLayer(parent.layer, true);
+        }
+
+        private static EventSystem CreateEventSystem(GameObject parent = null)
+        {
+            var evtSystem = UnityObject.FindObjectOfType<EventSystem>();
+            if (evtSystem == null)
+            {
+                var evtSystemGo = new GameObject(kEventSystemName);
+                evtSystem = evtSystemGo.AddComponent<EventSystem>();
+                evtSystemGo.AddComponent<StandaloneInputModule>();
+
+                if (parent != null)
+                {
+                    evtSystemGo.transform.SetParent(parent.transform, false);
+                    evtSystemGo.layer = parent.layer;
+                }
+
+                Undo.RegisterCreatedObjectUndo(evtSystemGo, "Create " + evtSystemGo.name);
+            }
+
+            return evtSystem;
+        }
+
+        private static Camera CreateUICamera(GameObject parent)
+        {
+            var uiCamera = parent.transform.FindComponentInChild<Camera>(false);
+            if (uiCamera == null)
+            {
+                var uiCameraGO = new GameObject(kUICameraName);
+                uiCameraGO.transform.SetParent(parent.transform, false);
+                uiCameraGO.layer = parent.layer;
+
+                uiCamera = uiCameraGO.AddComponent<Camera>();
+                uiCamera.clearFlags = CameraClearFlags.Depth;
+                uiCamera.cullingMask = 1 << parent.layer;
+                uiCamera.orthographic = true;
+                uiCamera.depth = 100;
+            }
+
+            return uiCamera;
+        }
+
+        public static void PlaceUIElementRoot(GameObject element, MenuCommand menuCommand)
+        {
+            GameObject parent = menuCommand.context as GameObject;
+            if (parent == null || parent.GetComponentInParent<Canvas>() == null)
+            {
+                parent = GetOrCreateCanvasGameObject();
+            }
+
+            string uniqueName = GameObjectUtility.GetUniqueNameForSibling(parent.transform, element.name);
+            element.name = uniqueName;
+            Undo.RegisterCreatedObjectUndo(element, "Create " + element.name);
+            Undo.SetTransformParent(element.transform, parent.transform, "Parent " + element.name);
+            GameObjectUtility.SetParentAndAlign(element, parent);
+            if (parent != menuCommand.context) // not a context click, so center in sceneview
+                SetPositionVisibleinSceneView(parent.GetComponent<RectTransform>(), element.GetComponent<RectTransform>());
+
+            Selection.activeGameObject = element;
+        }
+
+        private static void SetPositionVisibleinSceneView(RectTransform canvasRTransform, RectTransform itemTransform)
+        {
+            // Find the best scene view
+            SceneView sceneView = SceneView.lastActiveSceneView;
+            if (sceneView == null && SceneView.sceneViews.Count > 0)
+                sceneView = SceneView.sceneViews[0] as SceneView;
+
+            // Couldn't find a SceneView. Don't set position.
+            if (sceneView == null || sceneView.camera == null)
+                return;
+
+            // Create world space Plane from canvas position.
+            Vector2 localPlanePosition;
+            Camera camera = sceneView.camera;
+            Vector3 position = Vector3.zero;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRTransform, new Vector2(camera.pixelWidth / 2, camera.pixelHeight / 2), camera, out localPlanePosition))
+            {
+                // Adjust for canvas pivot
+                localPlanePosition.x = localPlanePosition.x + canvasRTransform.sizeDelta.x * canvasRTransform.pivot.x;
+                localPlanePosition.y = localPlanePosition.y + canvasRTransform.sizeDelta.y * canvasRTransform.pivot.y;
+
+                localPlanePosition.x = Mathf.Clamp(localPlanePosition.x, 0, canvasRTransform.sizeDelta.x);
+                localPlanePosition.y = Mathf.Clamp(localPlanePosition.y, 0, canvasRTransform.sizeDelta.y);
+
+                // Adjust for anchoring
+                position.x = localPlanePosition.x - canvasRTransform.sizeDelta.x * itemTransform.anchorMin.x;
+                position.y = localPlanePosition.y - canvasRTransform.sizeDelta.y * itemTransform.anchorMin.y;
+
+                Vector3 minLocalPosition;
+                minLocalPosition.x = canvasRTransform.sizeDelta.x * (0 - canvasRTransform.pivot.x) + itemTransform.sizeDelta.x * itemTransform.pivot.x;
+                minLocalPosition.y = canvasRTransform.sizeDelta.y * (0 - canvasRTransform.pivot.y) + itemTransform.sizeDelta.y * itemTransform.pivot.y;
+
+                Vector3 maxLocalPosition;
+                maxLocalPosition.x = canvasRTransform.sizeDelta.x * (1 - canvasRTransform.pivot.x) - itemTransform.sizeDelta.x * itemTransform.pivot.x;
+                maxLocalPosition.y = canvasRTransform.sizeDelta.y * (1 - canvasRTransform.pivot.y) - itemTransform.sizeDelta.y * itemTransform.pivot.y;
+
+                position.x = Mathf.Clamp(position.x, minLocalPosition.x, maxLocalPosition.x);
+                position.y = Mathf.Clamp(position.y, minLocalPosition.y, maxLocalPosition.y);
+            }
+
+            itemTransform.anchoredPosition = position;
+            itemTransform.localRotation = Quaternion.identity;
+            itemTransform.localScale = Vector3.one;
+        }
+
+        private static GameObject GetOrCreateCanvasGameObject()
+        {
+            GameObject selectedGo = Selection.activeGameObject;
+
+            Canvas canvas = (selectedGo != null) ? selectedGo.GetComponentInParent<Canvas>() : null;
+            if (canvas != null && canvas.gameObject.activeInHierarchy)
+                return canvas.gameObject;
+
+            UILayer layer = FindUILayer(true);
+            canvas = layer.GetComponent<Canvas>();
+
+            return canvas.gameObject;
+        }
+
+        // Helper methods at top
+
+        private static GameObject CreateUIElementRoot(string name, Vector2 size)
+        {
+            GameObject child = new GameObject(name);
+            RectTransform rectTransform = child.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = size;
+            return child;
+        }
+
+        private static void SetDefaultTextValues(Text lbl)
+        {
+            lbl.color = s_TextColor;
+
+            System.Type textType = lbl.GetType();
+            MethodInfo mi = textType.GetMethod("AssignDefaultFont", BindingFlags.NonPublic | BindingFlags.Instance);
+            mi.Invoke(lbl, new System.Object[] { });
+        }
+
+        private static void SetDefaultColorTransitionValues(Selectable slider)
+        {
+            ColorBlock colors = slider.colors;
+            colors.highlightedColor = new Color(0.882f, 0.882f, 0.882f);
+            colors.pressedColor = new Color(0.698f, 0.698f, 0.698f);
+            colors.disabledColor = new Color(0.521f, 0.521f, 0.521f);
+        }
+
+
 #if ENABLE_LUA
         public static GameObject CreateLuaButton(Resources resources)
         {
