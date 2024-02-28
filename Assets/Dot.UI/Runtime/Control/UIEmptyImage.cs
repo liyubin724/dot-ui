@@ -3,8 +3,8 @@ using UnityEngine.UI;
 
 namespace DotEngine.UI
 {
-    [AddComponentMenu("UI/Clear Image", 10)]
-    public class UIClearImage : Image
+    [AddComponentMenu("UI/Empty Image", 10)]
+    public class UIEmptyImage : Image
     {
         protected override void OnPopulateMesh(VertexHelper toFill)
         {

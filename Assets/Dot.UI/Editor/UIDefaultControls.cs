@@ -158,35 +158,35 @@ namespace DotEditor.UI
 
         public static GameObject CreateUIAtlasImage(Resources resources)
         {
-            GameObject go = CreateUIElementRoot("AtlasImage", s_ImageElementSize);
+            GameObject go = CreateUIElementRoot("Atlas Image", s_ImageElementSize);
             go.AddComponent<UIAtlasImage>();
             return go;
         }
 
         public static GameObject CreateClearImage(Resources resources)
         {
-            GameObject go = CreateUIElementRoot("ClearImage", s_ImageElementSize);
-            go.AddComponent<UIClearImage>();
+            GameObject go = CreateUIElementRoot("Empty Image", s_ImageElementSize);
+            go.AddComponent<UIEmptyImage>();
             return go;
         }
 
         public static GameObject CreateWebImage(Resources resources)
         {
-            GameObject go = CreateUIElementRoot("WebImage", s_ImageElementSize);
+            GameObject go = CreateUIElementRoot("Web Image", s_ImageElementSize);
             go.AddComponent<UIWebImage>();
             return go;
         }
 
         public static GameObject CreateDynamicAtlasImage(Resources resources)
         {
-            GameObject go = CreateUIElementRoot("DynamicAtlasImage", s_ImageElementSize);
+            GameObject go = CreateUIElementRoot("Dynamic Atlas Image", s_ImageElementSize);
             go.AddComponent<UIDynamicAtlasImage>();
             return go;
         }
 
         public static GameObject CreateAtlasImageAnimation(Resources resources)
         {
-            GameObject go = CreateUIElementRoot("AtlasImageAnimation", s_ImageElementSize);
+            GameObject go = CreateUIElementRoot("Atlas Image Animation", s_ImageElementSize);
             go.AddComponent<UIAtlasImageAnimation>();
             return go;
         }

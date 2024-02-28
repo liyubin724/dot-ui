@@ -55,8 +55,8 @@ namespace DotEditor.UI
             Selection.activeObject = layer.gameObject;
         }
 
-        [MenuItem("GameObject/UI/Clear Image", false, 1000)]
-        static public void AddClearImage(MenuCommand menuCommand)
+        [MenuItem("GameObject/UI/Empty Image", false, 1000)]
+        static public void AddEmptyImage(MenuCommand menuCommand)
         {
             GameObject go = UIDefaultControls.CreateClearImage(GetStandardResources());
             UIDefaultControls.PlaceUIElementRoot(go, menuCommand);
