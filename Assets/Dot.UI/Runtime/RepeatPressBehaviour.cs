@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 namespace DotEngine.UI
 {
     [RequireComponent(typeof(Graphics))]
-    public class GraphicPressBehaviour : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+    public class RepeatPressBehaviour : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         public float triggerInterval = 0.3f;
 
