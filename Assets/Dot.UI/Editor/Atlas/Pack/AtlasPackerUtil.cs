@@ -37,7 +37,7 @@ namespace DotEditor.UI
         [MenuItem("Dot/UI/Atlas/Create Packer Setting", priority = 1)]
         public static void CreateSpriteAtlasSetting()
         {
-            string[] selectedDirs = SelectionUtility.GetSelectionDirs();
+            string[] selectedDirs = SelectionUtility.GetFolders();
             if (selectedDirs == null || selectedDirs.Length == 0)
             {
                 EditorUtility.DisplayDialog("Warning", "Please selected a directory", "OK");
@@ -59,7 +59,7 @@ namespace DotEditor.UI
         [MenuItem("Dot/UI/Atlas/Pack Atlas", priority = 2)]
         public static void AutoPackSelectedAtlas()
         {
-            string[] selectedDirs = SelectionUtility.GetSelectionDirs();
+            string[] selectedDirs = SelectionUtility.GetFolders();
             if (selectedDirs == null || selectedDirs.Length == 0)
             {
                 EditorUtility.DisplayDialog("Warning", "Please selected a directory", "OK");
