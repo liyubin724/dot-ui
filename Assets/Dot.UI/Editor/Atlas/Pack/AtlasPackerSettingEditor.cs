@@ -1,4 +1,4 @@
-﻿using DotEditor.Core.GUI;
+﻿using DotEditor.Core.IMGUI;
 using UnityEditor;
 
 namespace DotEditor.UI.Atlas
