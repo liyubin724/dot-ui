@@ -36,7 +36,7 @@ namespace DotEditor.UI
 
             List<string> texturePathList = new List<string>();
 
-            SpriteAtlasUtility.PackAtlases(new SpriteAtlas[] { atlas }, EditorUserBuildSettings.activeBuildTarget);
+            UnityEditor.U2D.SpriteAtlasUtility.PackAtlases(new SpriteAtlas[] { atlas }, EditorUserBuildSettings.activeBuildTarget);
             MethodInfo getPreviewTextureMI = typeof(SpriteAtlasExtensions).GetMethod("GetPreviewTextures", BindingFlags.Static | BindingFlags.NonPublic);
             Texture2D[] atlasTextures = (Texture2D[])getPreviewTextureMI.Invoke(null, new SystemObject[] { atlas });
             if (atlasTextures != null && atlasTextures.Length > 0)
