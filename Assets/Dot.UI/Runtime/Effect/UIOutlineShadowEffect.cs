@@ -215,7 +215,7 @@ namespace DotEngine.UI
             if (!IsActive())
                 return;
 
-            var output = ListPool<UIVertex>.Get();
+            var output = ListPool<UIVertex>.Pop();
             vh.GetUIVertexStream(output);
 
             int len = output.Count;
@@ -262,7 +262,7 @@ namespace DotEngine.UI
 
             vh.Clear();
             vh.AddUIVertexTriangleStream(output);
-            ListPool<UIVertex>.Release(output);
+            ListPool<UIVertex>.Push(output);
         }
     }
 }
