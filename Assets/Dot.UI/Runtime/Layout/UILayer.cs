@@ -1,42 +1,39 @@
-using System;
 using UnityEngine;
 
 namespace DotEngine.UI.Layout
 {
-    [Flags]
-    public enum UILayerMask
+    public enum UILayerLevel
     {
-        BackGround = 1 << 0,
-        Main = 1 << 1,
-        Default = 1 << 2,
-        Popup = 1 << 3,
-        Overlay = 1 << 4,
-        System = 1 << 5,
+        BackGround = -2,
+        Main = -1,
+        Default = 0,
+        Popup = 1,
+        Overlay = 2,
     }
 
     [RequireComponent(typeof(Canvas))]
     public class UILayer : MonoBehaviour
     {
         [SerializeField]
-        private int m_Layer;
+        private UILayerLevel m_Level = UILayerLevel.Default;
         [SerializeField]
-        private string m_Name;
+        private string m_Alias;
         [SerializeField]
         private bool m_Visible = true;
 
-        public UILayerMask layer => layer;
-        public new string name
+        public UILayerLevel level => m_Level;
+        public string alias
         {
             get
             {
-                return m_Name;
+                return m_Alias;
             }
             set
             {
-                if (m_Name != value)
+                if (m_Alias != value)
                 {
-                    m_Name = value;
-                    base.name = value;
+                    m_Alias = value;
+                    name = value;
                 }
             }
         }
@@ -48,11 +45,7 @@ namespace DotEngine.UI.Layout
             }
             set
             {
-                if (m_Visible != value)
-                {
-                    m_Visible = value;
-                    m_Canvas.enabled = value;
-                }
+                SetVisible(value);
             }
         }
 
@@ -74,13 +67,27 @@ namespace DotEngine.UI.Layout
             m_RectTransform = (RectTransform)base.transform;
 
             m_Canvas = GetComponent<Canvas>();
+
             if (canvas.enabled != m_Visible)
             {
                 canvas.enabled = m_Visible;
             }
-            if (!string.IsNullOrEmpty(m_Name) && base.name != m_Name)
+            if (string.IsNullOrEmpty(m_Alias))
             {
-                base.name = m_Name;
+                m_Alias = name;
+            }
+            else if (m_Alias != name)
+            {
+                name = m_Alias;
+            }
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (m_Visible != visible)
+            {
+                m_Visible = visible;
+                m_Canvas.enabled = m_Visible;
             }
         }
     }

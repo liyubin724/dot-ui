@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,22 +10,27 @@ namespace DotEngine.UI.Layout
     public class UIHierarchy : MonoBehaviour
     {
         [SerializeField]
-        private string m_Name = string.Empty;
+        private string m_Alias;
         [SerializeField]
         private bool m_Visible = true;
         [SerializeField]
+        public UICamera m_UICamera;
+        [SerializeField]
         private UILayer[] m_layers = new UILayer[0];
 
-        public new string name
+        public string alias
         {
             get
             {
-                return m_Name;
+                return m_Alias;
             }
             set
             {
-                m_Name = value;
-                base.name = value;
+                if (m_Alias != value)
+                {
+                    m_Alias = value;
+                    name = value;
+                }
             }
         }
         public bool visible
@@ -42,6 +48,9 @@ namespace DotEngine.UI.Layout
             }
         }
 
+        public UICamera uiCamera => m_UICamera;
+        public new Camera camera => m_UICamera?.camera;
+
         private GameObject m_GameObject;
         private Transform m_Transform;
         private RectTransform m_RectTransform;
@@ -56,6 +65,9 @@ namespace DotEngine.UI.Layout
         public CanvasScaler scaler => m_CanvasScaler;
         public GraphicRaycaster raycaster => m_GraphicRaycaster;
 
+        private Dictionary<string, UILayer> m_NameToLayerDic = new Dictionary<string, UILayer>();
+        private Dictionary<UILayerLevel, UILayer> m_LevelToLayerDic = new Dictionary<UILayerLevel, UILayer>();
+
         private void Awake()
         {
             m_GameObject = base.gameObject;
@@ -66,41 +78,92 @@ namespace DotEngine.UI.Layout
             m_CanvasScaler = GetComponent<CanvasScaler>();
             m_GraphicRaycaster = GetComponent<GraphicRaycaster>();
 
+            if (m_layers != null && m_layers.Length > 0)
+            {
+                foreach (var layer in m_layers)
+                {
+                    if (!m_NameToLayerDic.ContainsKey(layer.name))
+                    {
+                        m_NameToLayerDic.Add(layer.name, layer);
+                    }
+                    else
+                    {
+                        Debug.LogError($"The name({layer.name}) of layer has been added");
+                    }
+
+                    if (!m_LevelToLayerDic.ContainsKey(layer.level))
+                    {
+                        m_LevelToLayerDic.Add(layer.level, layer);
+                    }
+                    else
+                    {
+                        Debug.LogError($"The level({layer.level}) of layer has been added");
+                    }
+                }
+            }
+
             if (canvas.enabled != m_Visible)
             {
                 canvas.enabled = m_Visible;
             }
-            if (!string.IsNullOrEmpty(m_Name) && base.name != m_Name)
+            if (string.IsNullOrEmpty(m_Alias))
             {
-                base.name = m_Name;
+                m_Alias = name;
+            }
+            else if (m_Alias != name)
+            {
+                name = m_Alias;
             }
         }
 
-        public UILayer GetLayer(string layerName)
+        public UILayer GetLayer(string alias)
         {
-            if (m_layers == null || m_layers.Length == 0)
+            if (m_NameToLayerDic.TryGetValue(alias, out var layer))
             {
-                return null;
-            }
-
-            foreach (var layer in m_layers)
-            {
-                if (layer.name == layerName)
-                {
-                    return layer;
-                }
+                return layer;
             }
             return null;
         }
 
-        public UILayer[] GetLayer(UILayerMask layerMask)
+        public UILayer GetLayer(UILayerLevel level)
         {
-            if (m_layers == null || m_layers.Length == 0)
+            if (m_LevelToLayerDic.TryGetValue(level, out var layer))
+            {
+                return layer;
+            }
+            return null;
+        }
+
+        public UILayer[] GetLayers(string[] aliases)
+        {
+            if (aliases == null || aliases.Length == 0)
             {
                 return null;
             }
 
-
+            UILayer[] layers = new UILayer[aliases.Length];
+            for (int i = 0; i < aliases.Length; i++)
+            {
+                layers[i] = GetLayer(aliases[i]);
+            }
+            return layers;
         }
+
+        public UILayer[] GetLayers(UILayerLevel[] levels)
+        {
+            if (levels == null || levels.Length == 0)
+            {
+                return null;
+            }
+
+            UILayer[] layers = new UILayer[levels.Length];
+            for (int i = 0; i < levels.Length; i++)
+            {
+                layers[i] = GetLayer(levels[i]);
+            }
+            return layers;
+        }
+
+
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -6,50 +7,84 @@ namespace DotEngine.UI.Layout
     public class UIRoot : MonoBehaviour
     {
         [SerializeField]
-        private UICamera m_UICamera;
-        [SerializeField]
         private EventSystem m_EventSystem;
         [SerializeField]
         private UIHierarchy[] m_Hierarchies = new UIHierarchy[0];
 
-        public UICamera uiCamera => m_UICamera;
-        public new Camera camera => m_UICamera.camera;
         public EventSystem eventSystem => m_EventSystem;
-
-        public UIHierarchy GetHierarchy(string name)
+        public UIHierarchy hierarchy
         {
-            if (m_Hierarchies == null || m_Hierarchies.Length == 0)
+            get
             {
+                if (m_Hierarchies != null && m_Hierarchies.Length > 0)
+                {
+                    return m_Hierarchies[0];
+                }
                 return null;
             }
+        }
 
-            foreach (var hierarchy in m_Hierarchies)
+        private Dictionary<string, UIHierarchy> m_NameToHierarchyDic = new Dictionary<string, UIHierarchy>();
+
+        private void Awake()
+        {
+            if (m_Hierarchies != null && m_Hierarchies.Length > 0)
             {
-                if (hierarchy.name == name)
+                foreach (var hierarchy in m_Hierarchies)
                 {
-                    return hierarchy;
+                    if (!m_NameToHierarchyDic.ContainsKey(hierarchy.name))
+                    {
+                        m_NameToHierarchyDic.Add(hierarchy.name, hierarchy);
+                    }
+                    else
+                    {
+                        Debug.LogError($"The name({hierarchy.name}) has been added");
+                    }
                 }
+            }
+        }
+
+        public UIHierarchy GetHierarchy(string hierarchyName)
+        {
+            if (m_NameToHierarchyDic.TryGetValue(hierarchyName, out var hierarchy))
+            {
+                return hierarchy;
             }
 
             return null;
         }
 
-        public UIHierarchy GetHierarchy(UILayer layer)
+        public UILayer GetLayer(string hierarchyName, string layerName)
         {
-            if (m_Hierarchies == null || m_Hierarchies.Length == 0)
+            UIHierarchy hierarchy = GetHierarchy(hierarchyName);
+            if (hierarchy == null)
             {
                 return null;
             }
 
-            foreach (var hierarchy in m_Hierarchies)
+            return hierarchy.GetLayer(layerName);
+        }
+
+        public UILayer GetLayer(string hierarchyName, UILayerLevel level)
+        {
+            UIHierarchy hierarchy = GetHierarchy(hierarchyName);
+            if (hierarchy == null)
             {
-                if ((hierarchy.layer & layer) > 0)
-                {
-                    return hierarchy;
-                }
+                return null;
             }
 
-            return null;
+            return hierarchy.GetLayer(level);
+        }
+
+        public UILayer[] GetLayers(string hierarchyName, UILayerLevel[] levels)
+        {
+            UIHierarchy hierarchy = GetHierarchy(hierarchyName);
+            if (hierarchy == null)
+            {
+                return null;
+            }
+
+            return hierarchy.GetLayers(levels);
         }
     }
 }
