@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace DotEngine.UI.Layout
+namespace DotEngine.UI
 {
     [RequireComponent(typeof(Canvas))]
     [RequireComponent(typeof(CanvasScaler))]
@@ -16,7 +16,7 @@ namespace DotEngine.UI.Layout
         [SerializeField]
         public UICamera m_UICamera;
         [SerializeField]
-        private UILayer[] m_layers = new UILayer[0];
+        private UILayer[] m_Layers = new UILayer[0];
 
         public string alias
         {
@@ -26,11 +26,10 @@ namespace DotEngine.UI.Layout
             }
             set
             {
-                if (m_Alias != value)
-                {
-                    m_Alias = value;
-                    name = value;
-                }
+                if (m_Alias == value) return;
+
+                m_Alias = value;
+                name = value;
             }
         }
         public bool visible
@@ -78,9 +77,9 @@ namespace DotEngine.UI.Layout
             m_CanvasScaler = GetComponent<CanvasScaler>();
             m_GraphicRaycaster = GetComponent<GraphicRaycaster>();
 
-            if (m_layers != null && m_layers.Length > 0)
+            if (m_Layers != null && m_Layers.Length > 0)
             {
-                foreach (var layer in m_layers)
+                foreach (var layer in m_Layers)
                 {
                     if (!m_NameToLayerDic.ContainsKey(layer.name))
                     {

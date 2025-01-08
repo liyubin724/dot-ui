@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace DotEngine.UI.Layout
+namespace DotEngine.UI
 {
     [RequireComponent(typeof(Camera))]
     public class UICamera : MonoBehaviour

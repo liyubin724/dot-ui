@@ -1,4 +1,5 @@
 using DotEngine.Core.Extensions;
+using DotEngine.Core.Utilities;
 using DotEngine.UI;
 using System;
 using System.Reflection;
@@ -6,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-
+using ArrayUtility = DotEngine.Core.Utilities.ArrayUtility;
 using UnityObject = UnityEngine.Object;
 
 namespace DotEditor.UI
@@ -69,115 +70,219 @@ namespace DotEditor.UI
         public static Color PanelColor = new Color(1f, 1f, 1f, 0.392f);
         public static Color TextColor = new Color(50f / 255f, 50f / 255f, 50f / 255f, 1f);
 
-        public static UIRoot CreateUIRoot(string name, int layer)
+        public static UIRoot CreateDefault()
+        {
+            var root = CreateUIRoot();
+
+            var hierarchy = CreateUIHierarchy(root, kUIHierarchyName);
+
+            CreateUILayer(hierarchy, UILayerLevel.Background);
+            CreateUILayer(hierarchy, UILayerLevel.Main);
+            CreateUILayer(hierarchy, UILayerLevel.Default);
+            CreateUILayer(hierarchy, UILayerLevel.Popup);
+            CreateUILayer(hierarchy, UILayerLevel.Overlay);
+
+            return root;
+        }
+
+        public static UIRoot FindUIRoot(bool createIfNot = true)
         {
             var root = UnityObject.FindObjectOfType<UIRoot>();
-            if (root != null)
+            if (root == null && createIfNot)
             {
-                return root;
+                root = CreateUIRoot();
             }
-
-            var rootGo = new GameObject(name);
-            rootGo.layer = layer;
-            root = rootGo.AddComponent<UIRoot>();
-            Undo.RegisterCreatedObjectUndo(rootGo, "Create " + rootGo.name);
-
-            var eventSystem = CreateEventSystem(rootGo);
-            root.eventSystem = eventSystem;
-
             return root;
         }
 
         public static UIRoot CreateUIRoot()
         {
-            return CreateUIRoot(kUIRootName, LayerMask.NameToLayer(kLayerName));
+            var rootGo = new GameObject(kUIRootName);
+            rootGo.layer = LayerMask.NameToLayer(kLayerName);
+
+            UIRoot root = rootGo.AddComponent<UIRoot>();
+
+            var eventSystem = FindEventSystem() ?? CreateEventSystem(rootGo);
+            ReflectionUtility.TrySetValue(root, "m_EventSystem", eventSystem);
+
+            Undo.RegisterCreatedObjectUndo(rootGo, "Create " + rootGo.name);
+
+            return root;
         }
 
-        public static UIHierarchy CreateUIHierarchy(string name, bool isDefault = false)
+        public static EventSystem FindEventSystem()
         {
-            var root = CreateUIRoot();
+            var evtSystem = UnityObject.FindObjectOfType<EventSystem>();
+            if (evtSystem != null)
+            {
+                return evtSystem;
+            }
 
-            var hierarchyGo = CreateUIObject(name, root.gameObject, typeof(UIHierarchy));
+            return null;
+        }
+
+        public static EventSystem CreateEventSystem(GameObject parent)
+        {
+            var evtSystem = UnityObject.FindObjectOfType<EventSystem>();
+            if (evtSystem != null)
+            {
+                return evtSystem;
+            }
+
+            var evtSystemGo = new GameObject(kEventSystemName);
+            evtSystem = evtSystemGo.AddComponent<EventSystem>();
+            evtSystemGo.AddComponent<StandaloneInputModule>();
+
+            if (parent != null)
+            {
+                evtSystemGo.transform.SetParent(parent.transform, false);
+                evtSystemGo.layer = parent.layer;
+            }
+
+            Undo.RegisterCreatedObjectUndo(evtSystemGo, "Create " + evtSystemGo.name);
+
+            return evtSystem;
+        }
+
+        public static UIHierarchy FindUIHierarchy(bool createIfNot = true)
+        {
+            var hierarchy = UnityObject.FindObjectOfType<UIHierarchy>();
+            if (hierarchy == null && createIfNot)
+            {
+                var root = FindUIRoot();
+                hierarchy = CreateUIHierarchy(root, kUIHierarchyName);
+            }
+
+            return hierarchy;
+        }
+
+        public static UIHierarchy CreateUIHierarchy(UIRoot root, string name)
+        {
+            var hierarchyGo = CreateUIObject(name, root.gameObject, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(UIHierarchy));
+
             var hierarchy = hierarchyGo.GetComponent<UIHierarchy>();
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Alias", name);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Visible", true);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_GameObject", hierarchyGo);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Transform", hierarchyGo.transform);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_RectTransform", (RectTransform)hierarchyGo.transform);
+
+            UICamera uiCamera = CreateUICamera(root.gameObject);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_UICamera", uiCamera);
 
             var hierarchyCanvas = hierarchyGo.GetComponent<Canvas>();
             hierarchyCanvas.renderMode = RenderMode.ScreenSpaceCamera;
-            hierarchy.canvas = hierarchyCanvas;
+            hierarchyCanvas.worldCamera = uiCamera.camera;
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Canvas", hierarchyCanvas);
 
             var canvasScaler = hierarchyGo.GetComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             canvasScaler.referenceResolution = new Vector2(kUIScreenWith, kUIScreenHeight);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CanvasScaler", canvasScaler);
 
-            var uiCamera = CreateUICamera(hierarchyGo);
-            hierarchy.uiCamera = uiCamera;
-            hierarchyCanvas.worldCamera = uiCamera;
-
-            var data = new UIHierarchyData()
-            {
-                name = name,
-                isDefault = isDefault,
-                hierarchy = hierarchy,
-            };
-
-            root.hierarchies ??= new UIHierarchyData[0];
-            ArrayUtility.Add(ref root.hierarchies, data);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_GraphicRaycaster", hierarchyGo.GetComponent<GraphicRaycaster>());
 
             Undo.RegisterCreatedObjectUndo(hierarchyGo, "Create " + hierarchyGo.name);
 
-            return hierarchy;
-        }
-
-        public static UIHierarchy CreateUIHierarchy(bool isDefault = false)
-        {
-            return CreateUIHierarchy(kUIHierarchyName, isDefault);
-        }
-
-        public static UIHierarchy FindUIHierarchy(bool createIfNot = true)
-        {
-            UIRoot root = CreateUIRoot();
-
-            UIHierarchy hierarchy = root.transform.FindComponentInChild<UIHierarchy>(false) ?? CreateUIHierarchy();
-
-            return hierarchy;
-        }
-
-        public static UILayer CreateUILayer(string name)
-        {
-            UIRoot root = CreateUIRoot();
-
-            UIHierarchy hierarchy = root.transform.FindComponentInChild<UIHierarchy>(false) ?? CreateUIHierarchy();
-            var hierarchyGo = hierarchy.gameObject;
-            var layerGo = CreateUIObject(name, hierarchyGo, typeof(UILayer));
-            var layer = layerGo.GetComponent<UILayer>();
-            var layerTransform = layerGo.transform as RectTransform;
-            layerTransform.SetStretchAnchorAll();
-            layer.cachedGameObject = layerGo;
-            layer.cachedTransform = layerTransform;
-
-            var data = new UILayerData()
+            if (ReflectionUtility.TryGetFieldValue(root, "m_Hierarchies", out var hierarchies))
             {
-                name = name,
-                layer = layer,
-            };
+                UIHierarchy[] tHierarchies = (UIHierarchy[])hierarchies;
+                ArrayUtility.Add(ref tHierarchies, hierarchy);
+                ReflectionUtility.TrySetFieldValue(root, "m_Hierarchies", tHierarchies);
+            }
+            else
+            {
+                ReflectionUtility.TrySetFieldValue(root, "m_Hierarchies", new UIHierarchy[1] { hierarchy });
+            }
 
-            hierarchy.layers ??= new UILayerData[0];
-            ArrayUtility.Add(ref hierarchy.layers, data);
+            Undo.RegisterCreatedObjectUndo(root, "Add " + hierarchyGo.name);
 
-            Undo.RegisterCreatedObjectUndo(layerGo, "Create " + layerGo.name);
-
-            return layer;
+            return hierarchy;
         }
 
-        public static UILayer CreateUILayer()
+        public static UICamera CreateUICamera(GameObject parent)
         {
-            return CreateUILayer(kUILayerName);
+            var uiCameraGO = new GameObject(kUICameraName);
+            uiCameraGO.transform.SetParent(parent.transform, false);
+            uiCameraGO.layer = parent.layer;
+
+            var camera = uiCameraGO.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.Depth;
+            camera.cullingMask = 1 << parent.layer;
+            camera.orthographic = true;
+            camera.depth = 1;
+            camera.nearClipPlane = -1;
+            camera.farClipPlane = 1000;
+
+            var uiCamera = uiCameraGO.AddComponent<UICamera>();
+            ReflectionUtility.TrySetFieldValue(uiCamera, "m_Camera", camera);
+
+            Undo.RegisterCreatedObjectUndo(uiCameraGO, "Create " + uiCameraGO.name);
+
+            return uiCamera;
         }
 
         public static UILayer FindUILayer(bool createIfNot = true)
         {
-            UIHierarchy hierarchy = FindUIHierarchy(true);
-            UILayer layer = hierarchy.transform.FindComponentInChild<UILayer>(false) ?? CreateUILayer();
+            var layer = UnityObject.FindObjectOfType<UILayer>();
+            if (layer == null && createIfNot)
+            {
+                var hierarchy = FindUIHierarchy();
+
+                CreateUILayer(hierarchy, UILayerLevel.Background);
+                CreateUILayer(hierarchy, UILayerLevel.Main);
+                layer = CreateUILayer(hierarchy, UILayerLevel.Default);
+                CreateUILayer(hierarchy, UILayerLevel.Popup);
+                CreateUILayer(hierarchy, UILayerLevel.Overlay);
+            }
+
+            return layer;
+        }
+
+        public static UILayer CreateUILayer(UIHierarchy hierarchy, UILayerLevel level, string name = null)
+        {
+            var layer = hierarchy.GetLayer(level);
+            if (layer != null)
+            {
+                return layer;
+            }
+
+            name ??= $"UI {Enum.GetName(typeof(UILayerLevel), level)} Layer";
+            var layerGO = CreateUIObject(name, hierarchy.gameObject, typeof(Canvas), typeof(UILayer));
+
+            layer = layerGO.GetComponent<UILayer>();
+            ReflectionUtility.TrySetFieldValue(layer, "m_Level", level);
+            ReflectionUtility.TrySetFieldValue(layer, "m_Alias", name);
+            ReflectionUtility.TrySetFieldValue(layer, "m_Visible", true);
+
+            ReflectionUtility.TrySetFieldValue(layer, "m_GameObject", layerGO);
+            ReflectionUtility.TrySetFieldValue(layer, "m_Transform", layerGO.transform);
+            ReflectionUtility.TrySetFieldValue(layer, "m_RectTransform", (RectTransform)layerGO.transform);
+
+            var canvas = layerGO.GetComponent<Canvas>();
+            var canvasTransform = (RectTransform)canvas.transform;
+            canvasTransform.anchorMin = Vector2.zero;
+            canvasTransform.anchorMax = Vector2.one;
+            canvasTransform.offsetMin = Vector2.zero;
+            canvasTransform.offsetMax = Vector2.zero;
+            ReflectionUtility.TrySetFieldValue(layer, "m_Canvas", canvas);
+
+            Undo.RegisterCreatedObjectUndo(layerGO, "Create " + layerGO.name);
+
+            if (ReflectionUtility.TryGetFieldValue(hierarchy, "m_Layers", out var layers))
+            {
+                UILayer[] tLayers = (UILayer[])layers;
+                ArrayUtility.Add(ref tLayers, layer);
+                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Layers", tLayers);
+            }
+            else
+            {
+                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Layers", new UILayer[1] { layer });
+            }
+
+            Undo.RegisterCreatedObjectUndo(hierarchy, "Add " + layerGO.name);
+
             return layer;
         }
 
@@ -253,48 +358,6 @@ namespace DotEditor.UI
 
             child.transform.SetParent(parent.transform, false);
             child.SetLayer(parent.layer, true);
-        }
-
-        private static EventSystem CreateEventSystem(GameObject parent = null)
-        {
-            var evtSystem = UnityObject.FindObjectOfType<EventSystem>();
-            if (evtSystem == null)
-            {
-                var evtSystemGo = new GameObject(kEventSystemName);
-                evtSystem = evtSystemGo.AddComponent<EventSystem>();
-                evtSystemGo.AddComponent<StandaloneInputModule>();
-
-                if (parent != null)
-                {
-                    evtSystemGo.transform.SetParent(parent.transform, false);
-                    evtSystemGo.layer = parent.layer;
-                }
-
-                Undo.RegisterCreatedObjectUndo(evtSystemGo, "Create " + evtSystemGo.name);
-            }
-
-            return evtSystem;
-        }
-
-        private static Camera CreateUICamera(GameObject parent)
-        {
-            var uiCamera = parent.transform.FindComponentInChild<Camera>(false);
-            if (uiCamera == null)
-            {
-                var uiCameraGO = new GameObject(kUICameraName);
-                uiCameraGO.transform.SetParent(parent.transform, false);
-                uiCameraGO.layer = parent.layer;
-
-                uiCamera = uiCameraGO.AddComponent<Camera>();
-                uiCamera.clearFlags = CameraClearFlags.Depth;
-                uiCamera.cullingMask = 1 << parent.layer;
-                uiCamera.orthographic = true;
-                uiCamera.depth = 100;
-                uiCamera.nearClipPlane = -100;
-                uiCamera.farClipPlane = 100;
-            }
-
-            return uiCamera;
         }
 
         public static void PlaceUIElementRoot(GameObject element, MenuCommand menuCommand)

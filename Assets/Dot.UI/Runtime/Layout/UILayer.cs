@@ -1,10 +1,10 @@
 using UnityEngine;
 
-namespace DotEngine.UI.Layout
+namespace DotEngine.UI
 {
     public enum UILayerLevel
     {
-        BackGround = -2,
+        Background = -2,
         Main = -1,
         Default = 0,
         Popup = 1,
@@ -62,11 +62,22 @@ namespace DotEngine.UI.Layout
 
         private void Awake()
         {
-            m_GameObject = base.gameObject;
-            m_Transform = base.transform;
-            m_RectTransform = (RectTransform)base.transform;
-
-            m_Canvas = GetComponent<Canvas>();
+            if (m_GameObject == null)
+            {
+                m_GameObject = base.gameObject;
+            }
+            if (m_Transform == null)
+            {
+                m_Transform = base.transform;
+            }
+            if (m_RectTransform == null)
+            {
+                m_RectTransform = (RectTransform)base.transform;
+            }
+            if (m_Canvas == null)
+            {
+                m_Canvas = GetComponent<Canvas>();
+            }
 
             if (canvas.enabled != m_Visible)
             {

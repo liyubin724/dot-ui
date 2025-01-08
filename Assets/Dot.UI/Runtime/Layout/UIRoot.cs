@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace DotEngine.UI.Layout
+namespace DotEngine.UI
 {
     public class UIRoot : MonoBehaviour
     {
@@ -12,6 +12,7 @@ namespace DotEngine.UI.Layout
         private UIHierarchy[] m_Hierarchies = new UIHierarchy[0];
 
         public EventSystem eventSystem => m_EventSystem;
+
         public UIHierarchy hierarchy
         {
             get
@@ -42,6 +43,8 @@ namespace DotEngine.UI.Layout
                     }
                 }
             }
+
+            DontDestroyOnLoad(this);
         }
 
         public UIHierarchy GetHierarchy(string hierarchyName)
