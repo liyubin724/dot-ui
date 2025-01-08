@@ -57,9 +57,6 @@ namespace DotEditor.UI
         public const string kUIHierarchyName = "UI Hierarchy";
         public const string kUILayerName = "UI Layer";
 
-        private const int kUIScreenWith = 1920;
-        private const int kUIScreenHeight = 1080;
-
         public const float kWidth = 160f;
         public const float kThickHeight = 30f;
         public const float kThinHeight = 20f;
@@ -178,7 +175,7 @@ namespace DotEditor.UI
             var canvasScaler = hierarchyGo.GetComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
-            canvasScaler.referenceResolution = new Vector2(kUIScreenWith, kUIScreenHeight);
+            canvasScaler.referenceResolution = new Vector2(UIDefines.DESIGN_SCREEN_WIDTH, UIDefines.DESIGN_SCREEN_HEIGHT);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_CanvasScaler", canvasScaler);
 
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_GraphicRaycaster", hierarchyGo.GetComponent<GraphicRaycaster>());

@@ -163,6 +163,18 @@ namespace DotEngine.UI
             return layers;
         }
 
+        public void SetLayersVisible(UILayerLevel[] levels, bool visible)
+        {
+            if (levels == null || levels.Length == 0)
+            {
+                return;
+            }
 
+            foreach (var level in levels)
+            {
+                var layer = GetLayer(level);
+                layer?.SetVisible(visible);
+            }
+        }
     }
 }
