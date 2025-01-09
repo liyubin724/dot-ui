@@ -6,5 +6,8 @@
         void OnActivated();
         void OnDeactivated();
         void OnDestroyed();
+
+        void OnAttached();
+        void OnDetached();
     }
 }

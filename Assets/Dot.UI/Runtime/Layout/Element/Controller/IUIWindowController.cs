@@ -1,8 +1,6 @@
 ﻿namespace DotEngine.UI
 {
-    public interface IUIWindowController : IUIElementController
+    public interface IUIWindowController : IUIContainerController<UIPanel>
     {
-        void OnPanelAdded(UIPanel panel);
-        void OnPanelRemoved(UIPanel panel);
     }
 }

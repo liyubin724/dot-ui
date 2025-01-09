@@ -1,6 +1,6 @@
 ﻿namespace DotEngine.UI
 {
-    public interface IUIPanelController : IUIElementController
+    public interface IUIPanelController : IUIContainerController<UIView>
     {
     }
 }
