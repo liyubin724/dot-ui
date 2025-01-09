@@ -7,10 +7,34 @@ namespace DotEngine.UI
     public class UIPanel : UIElement
     {
         [SerializeField]
-        private List<UIView> m_Views = new List<UIView>();
+        private UIView[] m_FixedViews = new UIView[0];
 
         private UIWindow m_Window = null;
         public UIWindow window => m_Window;
+
+        private IUIPanelController m_Controller = null;
+        public IUIPanelController controller => m_Controller;
+
+        private List<UIView> m_Views = new List<UIView>();
+
+        public override void Initialize()
+        {
+            if (m_FixedViews != null && m_FixedViews.Length > 0)
+            {
+                foreach (var view in m_FixedViews)
+                {
+                    m_Views.Add(view);
+                }
+            }
+
+            foreach (var view in m_Views)
+            {
+                view.Initialize();
+            }
+
+            OnInitialized();
+            m_Controller?.OnInitialized();
+        }
 
         public virtual void AttachToWindow(UIWindow window)
         {
@@ -150,6 +174,11 @@ namespace DotEngine.UI
                 }
             }
         }
+
+        protected virtual void OnInitialized() { }
+        protected virtual void OnActivated() { }
+        protected virtual void OnDeactivated() { }
+        protected virtual void OnDestroyed() { }
 
         protected virtual void OnViewAdded(UIView view) { }
         protected virtual void OnViewRemoved(UIView view) { }
