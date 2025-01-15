@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using DotEngine.Core.Extensions;
+using UnityEngine;
 
 namespace DotEngine.UI
 {
@@ -17,6 +18,14 @@ namespace DotEngine.UI
         private bool m_IsActive = false;
         public bool isActive => m_IsActive;
 
+        private bool m_Visible = true;
+        public bool visible => m_Visible;
+
+        protected virtual void Awake()
+        {
+            m_Visible = gameObject.activeSelf;
+        }
+
         public virtual void Initialize()
         {
             if (m_IsInited)
@@ -33,6 +42,7 @@ namespace DotEngine.UI
             {
                 return;
             }
+
             m_IsActive = true;
             OnActivated();
         }
@@ -43,6 +53,7 @@ namespace DotEngine.UI
             {
                 return;
             }
+
             m_IsActive = false;
             OnDeactivated();
         }
@@ -53,8 +64,29 @@ namespace DotEngine.UI
             {
                 return;
             }
+
+            if (m_IsActive)
+            {
+                Deactivate();
+            }
+
             m_IsInited = false;
             OnDestroyed();
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (m_Visible != visible)
+            {
+                m_Visible = visible;
+
+                gameObject.SetActive(visible);
+            }
+        }
+
+        public void SetLayer(int layer)
+        {
+            gameObject.SetLayer(layer);
         }
 
         public virtual void AttachToParent(UIElement parent)

@@ -1,4 +1,5 @@
 ﻿using DotEngine.Core;
+using UnityEngine.EventSystems;
 using UnityObject = UnityEngine.Object;
 
 namespace DotEngine.UI
@@ -31,7 +32,14 @@ namespace DotEngine.UI
             instance = null;
         }
 
+        private bool m_InputEnable = true;
+        public bool inputEnable => m_InputEnable;
+
         private UIRoot m_UIRoot;
+        public EventSystem eventSystem => m_UIRoot.eventSystem;
+        public UIHierarchy hierarchy => m_UIRoot.hierarchy;
+        public UICamera uiCamera => hierarchy.uiCamera;
+
         private void OnInitialized()
         {
             m_UIRoot = UnityObject.FindObjectOfType<UIRoot>();
@@ -39,11 +47,22 @@ namespace DotEngine.UI
             {
                 Logger.Error("The root of ui is not found");
             }
+
+            m_InputEnable = eventSystem.enabled;
+        }
+
+        public void SetInputEnable(bool enable)
+        {
+            if (m_InputEnable != enable)
+            {
+                m_InputEnable = enable;
+                eventSystem.enabled = enable;
+            }
         }
 
         private void OnDestroyed()
         {
-
+            m_UIRoot = null;
         }
     }
 }

@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace DotEngine.UI
 {
-    public abstract class UIContainer<T, C> : UIElement where T : UIElement where C : class, IUIContainerController<T>
+    public abstract class UIContainer<TElement, TController> : UIElement where TElement : UIElement where TController : class, IUIContainerController<TElement>
     {
         [SerializeReference]
-        private T[] m_FixedElements = new T[0];
+        private TElement[] m_FixedElements = new TElement[0];
 
-        private C m_Controller = null;
-        public C controller
+        private TController m_Controller = null;
+        public TController controller
         {
             get
             {
@@ -22,8 +22,8 @@ namespace DotEngine.UI
             }
         }
 
-        private List<T> m_Elements = new List<T>();
-        public T this[string identity]
+        private List<TElement> m_Elements = new List<TElement>();
+        public TElement this[string identity]
         {
             get
             {
@@ -99,7 +99,7 @@ namespace DotEngine.UI
             return false;
         }
 
-        public bool HasElement<E>(string identity) where E : T
+        public bool HasElement<E>(string identity) where E : TElement
         {
             foreach (var element in m_Elements)
             {
@@ -113,7 +113,7 @@ namespace DotEngine.UI
             return false;
         }
 
-        public T GetElement(string identity)
+        public TElement GetElement(string identity)
         {
             foreach (var element in m_Elements)
             {
@@ -125,9 +125,9 @@ namespace DotEngine.UI
             return null;
         }
 
-        public T[] GetElements(string identity)
+        public TElement[] GetElements(string identity)
         {
-            var list = ListPool<T>.Pop();
+            var list = ListPool<TElement>.Pop();
 
             foreach (var element in m_Elements)
             {
@@ -139,11 +139,11 @@ namespace DotEngine.UI
             }
 
             var result = list.ToArray();
-            ListPool<T>.Push(list);
+            ListPool<TElement>.Push(list);
             return result;
         }
 
-        public E[] GetElements<E>(string identity) where E : T
+        public E[] GetElements<E>(string identity) where E : TElement
         {
             List<E> list = ListPool<E>.Pop();
 
@@ -162,7 +162,7 @@ namespace DotEngine.UI
             return result;
         }
 
-        public void AddElement(T element)
+        public void AddElement(TElement element)
         {
             m_Elements.Add(element);
 
@@ -188,7 +188,7 @@ namespace DotEngine.UI
             m_Controller?.OnElementAdded(element);
         }
 
-        public void RemoveElement(T element)
+        public void RemoveElement(TElement element)
         {
             for (int i = 0; i < m_Elements.Count; i++)
             {
@@ -248,7 +248,7 @@ namespace DotEngine.UI
             }
         }
 
-        protected abstract void OnElementAdded(T element);
-        protected abstract void OnElementRemoved(T element);
+        protected abstract void OnElementAdded(TElement element);
+        protected abstract void OnElementRemoved(TElement element);
     }
 }
