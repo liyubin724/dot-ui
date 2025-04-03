@@ -45,7 +45,7 @@ namespace DotEngine.UI
             m_UIRoot = UnityObject.FindObjectOfType<UIRoot>();
             if (m_UIRoot == null)
             {
-                Logger.Error("The root of ui is not found");
+                DLogger.Error("The root of ui is not found");
             }
 
             m_InputEnable = eventSystem.enabled;
