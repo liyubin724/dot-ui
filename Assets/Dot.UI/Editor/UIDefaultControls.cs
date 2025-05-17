@@ -73,11 +73,11 @@ namespace DotEditor.UI
 
             var hierarchy = CreateUIHierarchy(root, kUIHierarchyName);
 
-            CreateUILayer(hierarchy, UILayerLevel.Background);
-            CreateUILayer(hierarchy, UILayerLevel.Main);
-            CreateUILayer(hierarchy, UILayerLevel.Default);
-            CreateUILayer(hierarchy, UILayerLevel.Popup);
-            CreateUILayer(hierarchy, UILayerLevel.Overlay);
+            CreateUIStage(hierarchy, UIDefines.UI_STAGE_BACKGROUND);
+            CreateUIStage(hierarchy, UIDefines.UI_STAGE_MAIN);
+            CreateUIStage(hierarchy, UIDefines.UI_STAGE_DEFAULT);
+            CreateUIStage(hierarchy, UIDefines.UI_STAGE_POPUP);
+            CreateUIStage(hierarchy, UIDefines.UI_STAGE_OVERLAY);
 
             return root;
         }
@@ -220,67 +220,65 @@ namespace DotEditor.UI
             return uiCamera;
         }
 
-        public static UILayer FindUILayer(bool createIfNot = true)
+        public static UIStage FindUIStage(bool createIfNot = true)
         {
-            var layer = UnityObject.FindObjectOfType<UILayer>();
-            if (layer == null && createIfNot)
+            var stage = UnityObject.FindObjectOfType<UIStage>();
+            if (stage == null && createIfNot)
             {
                 var hierarchy = FindUIHierarchy();
 
-                CreateUILayer(hierarchy, UILayerLevel.Background);
-                CreateUILayer(hierarchy, UILayerLevel.Main);
-                layer = CreateUILayer(hierarchy, UILayerLevel.Default);
-                CreateUILayer(hierarchy, UILayerLevel.Popup);
-                CreateUILayer(hierarchy, UILayerLevel.Overlay);
+                CreateUIStage(hierarchy, UIDefines.UI_STAGE_BACKGROUND);
+                CreateUIStage(hierarchy, UIDefines.UI_STAGE_MAIN);
+                stage = CreateUIStage(hierarchy, UIDefines.UI_STAGE_DEFAULT);
+                CreateUIStage(hierarchy, UIDefines.UI_STAGE_POPUP);
+                CreateUIStage(hierarchy, UIDefines.UI_STAGE_OVERLAY);
             }
 
-            return layer;
+            return stage;
         }
 
-        public static UILayer CreateUILayer(UIHierarchy hierarchy, UILayerLevel level, string name = null)
+        public static UIStage CreateUIStage(UIHierarchy hierarchy, string identity)
         {
-            var layer = hierarchy.GetLayer(level);
-            if (layer != null)
+            var stage = hierarchy.GetStage(identity);
+            if (stage != null)
             {
-                return layer;
+                return stage;
             }
 
-            name ??= $"UI {Enum.GetName(typeof(UILayerLevel), level)} Layer";
-            var layerGO = CreateUIObject(name, hierarchy.gameObject, typeof(Canvas), typeof(UILayer));
+            var name = $"UI {identity} Stage";
+            var stageGO = CreateUIObject(name, hierarchy.gameObject, typeof(Canvas), typeof(UIStage));
 
-            layer = layerGO.GetComponent<UILayer>();
-            ReflectionUtility.TrySetFieldValue(layer, "m_Level", level);
-            ReflectionUtility.TrySetFieldValue(layer, "m_Alias", name);
-            ReflectionUtility.TrySetFieldValue(layer, "m_Visible", true);
+            stage = stageGO.GetComponent<UIStage>();
+            ReflectionUtility.TrySetFieldValue(stage, "m_Identity", identity);
 
-            ReflectionUtility.TrySetFieldValue(layer, "m_GameObject", layerGO);
-            ReflectionUtility.TrySetFieldValue(layer, "m_Transform", layerGO.transform);
-            ReflectionUtility.TrySetFieldValue(layer, "m_RectTransform", (RectTransform)layerGO.transform);
+            ReflectionUtility.TrySetFieldValue(stage, "m_GameObject", stageGO);
+            ReflectionUtility.TrySetFieldValue(stage, "m_Transform", stageGO.transform);
+            ReflectionUtility.TrySetFieldValue(stage, "m_RectTransform", (RectTransform)stageGO.transform);
 
-            var canvas = layerGO.GetComponent<Canvas>();
+            var canvas = stageGO.GetComponent<Canvas>();
             var canvasTransform = (RectTransform)canvas.transform;
             canvasTransform.anchorMin = Vector2.zero;
             canvasTransform.anchorMax = Vector2.one;
             canvasTransform.offsetMin = Vector2.zero;
             canvasTransform.offsetMax = Vector2.zero;
-            ReflectionUtility.TrySetFieldValue(layer, "m_Canvas", canvas);
+            ReflectionUtility.TrySetFieldValue(stage, "m_Canvas", canvas);
 
-            Undo.RegisterCreatedObjectUndo(layerGO, "Create " + layerGO.name);
+            Undo.RegisterCreatedObjectUndo(stageGO, "Create " + stageGO.name);
 
-            if (ReflectionUtility.TryGetFieldValue(hierarchy, "m_Layers", out var layers))
+            if (ReflectionUtility.TryGetFieldValue(hierarchy, "m_Stages", out var layers))
             {
-                UILayer[] tLayers = (UILayer[])layers;
-                ArrayUtility.Add(ref tLayers, layer);
-                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Layers", tLayers);
+                UIStage[] tLayers = (UIStage[])layers;
+                ArrayUtility.Add(ref tLayers, stage);
+                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Stages", tLayers);
             }
             else
             {
-                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Layers", new UILayer[1] { layer });
+                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Stages", new UIStage[1] { stage });
             }
 
-            Undo.RegisterCreatedObjectUndo(hierarchy, "Add " + layerGO.name);
+            Undo.RegisterCreatedObjectUndo(hierarchy, "Add " + stageGO.name);
 
-            return layer;
+            return stage;
         }
 
         public static GameObject CreateUIEmptyImage()
@@ -429,7 +427,7 @@ namespace DotEditor.UI
             if (canvas != null && canvas.gameObject.activeInHierarchy)
                 return canvas.gameObject;
 
-            UILayer layer = FindUILayer(true);
+            UIStage layer = FindUIStage(true);
             canvas = layer.GetComponent<Canvas>();
 
             return canvas.gameObject;

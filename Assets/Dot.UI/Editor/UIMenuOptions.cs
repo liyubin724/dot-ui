@@ -33,8 +33,8 @@ namespace DotEditor.UI
             Selection.activeObject = hierarchy.gameObject;
         }
 
-        [MenuItem("GameObject/UI/UI Layer", false, 902)]
-        static public void AddUILayer()
+        [MenuItem("GameObject/UI/UI Stage", false, 902)]
+        static public void AddUIStage()
         {
             UIHierarchy hierarchy = null;
 
@@ -48,7 +48,7 @@ namespace DotEditor.UI
                 hierarchy = FindUIHierarchy();
             }
 
-            UILayer layer = CreateUILayer(hierarchy, UILayerLevel.Default);
+            UIStage layer = CreateUIStage(hierarchy, UIDefines.UI_STAGE_DEFAULT);
             Selection.activeObject = layer.gameObject;
         }
 
