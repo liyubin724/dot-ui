@@ -25,31 +25,30 @@ namespace DotEngine.UI
             }
         }
 
-        private Dictionary<string, UIHierarchy> m_NameToHierarchyDic = new Dictionary<string, UIHierarchy>();
+        private Dictionary<string, UIHierarchy> m_HierarchyDic = new Dictionary<string, UIHierarchy>();
 
         private void Awake()
         {
+            DontDestroyOnLoad(gameObject);
+
             if (m_Hierarchies != null && m_Hierarchies.Length > 0)
             {
                 foreach (var hierarchy in m_Hierarchies)
                 {
-                    if (!m_NameToHierarchyDic.ContainsKey(hierarchy.name))
-                    {
-                        m_NameToHierarchyDic.Add(hierarchy.name, hierarchy);
-                    }
-                    else
-                    {
-                        Debug.LogError($"The name({hierarchy.name}) has been added");
-                    }
+                    hierarchy.Initialize();
+                    m_HierarchyDic.Add(hierarchy.identity, hierarchy);
                 }
             }
+        }
 
-            DontDestroyOnLoad(this);
+        public bool HasHierarchy(string hierarchyName)
+        {
+            return m_HierarchyDic.ContainsKey(hierarchyName);
         }
 
         public UIHierarchy GetHierarchy(string hierarchyName)
         {
-            if (m_NameToHierarchyDic.TryGetValue(hierarchyName, out var hierarchy))
+            if (m_HierarchyDic.TryGetValue(hierarchyName, out var hierarchy))
             {
                 return hierarchy;
             }
@@ -57,7 +56,18 @@ namespace DotEngine.UI
             return null;
         }
 
-        public UIStage GetLayer(string hierarchyIdentity, string stageIdentity)
+        public bool HasStage(string hierarchyIdentity, string stageIdentity)
+        {
+            UIHierarchy hierarchy = GetHierarchy(hierarchyIdentity);
+            if (hierarchy == null)
+            {
+                return false;
+            }
+
+            return hierarchy.HasStage(stageIdentity);
+        }
+
+        public UIStage GetStage(string hierarchyIdentity, string stageIdentity)
         {
             UIHierarchy hierarchy = GetHierarchy(hierarchyIdentity);
             if (hierarchy == null)

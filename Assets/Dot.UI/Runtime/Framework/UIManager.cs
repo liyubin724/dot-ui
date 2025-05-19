@@ -4,7 +4,7 @@ using UnityObject = UnityEngine.Object;
 
 namespace DotEngine.UI
 {
-    public sealed class UIManager
+    public class UIManager
     {
         private static UIManager sm_Instance;
 

@@ -90,12 +90,20 @@ namespace DotEngine.UI
 
         protected abstract void OnParentChanged(GameObject from, GameObject to);
 
+        public new GameObject gameObject { get; private set; }
+        public new Transform transform { get; private set; }
+        public RectTransform rectTransform { get; private set; }
+
         public virtual void Initialize()
         {
             if (isInited)
             {
                 return;
             }
+
+            gameObject = base.gameObject;
+            transform = base.transform;
+            rectTransform = (RectTransform)transform;
 
             OnInitialized();
             isInited = true;

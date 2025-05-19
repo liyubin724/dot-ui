@@ -17,6 +17,18 @@ namespace DotEngine.UI
             }
         }
 
+        public TChild this[int index]
+        {
+            get
+            {
+                if (index >= 0 && index < m_Childs.Count)
+                {
+                    return m_Childs[index];
+                }
+                return null;
+            }
+        }
+
         public string[] GetChildNames()
         {
             return (
@@ -67,7 +79,21 @@ namespace DotEngine.UI
 
         public void AddChild(TChild child)
         {
-            m_Childs.Add(child);
+            InsertChild(child, m_Childs.Count);
+        }
+
+        public void InsertChild(TChild child, int index)
+        {
+            if (index < 0)
+            {
+                index = 0;
+            }
+            else if (index >= m_Childs.Count)
+            {
+                index = m_Childs.Count;
+            }
+
+            m_Childs.Insert(index, child);
 
             if (isInited)
             {
@@ -85,18 +111,22 @@ namespace DotEngine.UI
                 }
             }
             child.parent = gameObject;
+            child.rectTransform.SetSiblingIndex(index);
 
             OnChildAdded(child);
         }
 
         public void RemoveChild(string identity, bool isAll = true)
         {
-            for (int i = m_Childs.Count - 1; i >= 0; i--)
+            int index = 0;
+            bool isRemoved = false;
+            for (int i = 0; i < m_Childs.Count;)
             {
                 var child = m_Childs[i];
                 if (child == null || child.identity == identity)
                 {
                     m_Childs.RemoveAt(i);
+                    isRemoved = true;
 
                     OnChildRemoved(child);
 
@@ -111,14 +141,28 @@ namespace DotEngine.UI
                         break;
                     }
                 }
+                else
+                {
+                    if (isRemoved)
+                    {
+                        child.rectTransform.SetSiblingIndex(index);
+                    }
+                    i = i + 1;
+                    index = index + 1;
+                }
             }
         }
 
         protected override void OnInitialized()
         {
-            foreach (var child in m_Childs)
+            for (int i = 0; i < m_Childs.Count - 1; i++)
             {
-                child?.Initialize();
+                var child = m_Childs[i];
+                if (child != null)
+                {
+                    child.Initialize();
+                    child.rectTransform.SetSiblingIndex(i);
+                }
             }
         }
 
