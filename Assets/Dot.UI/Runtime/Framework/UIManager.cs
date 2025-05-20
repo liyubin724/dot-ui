@@ -25,25 +25,37 @@ namespace DotEngine.UI
 
         public static void DestroyInstance()
         {
-            if (sm_Instance != null)
-            {
-                sm_Instance.OnDestroyed();
-            }
+            sm_Instance?.OnDestroyed();
             sm_Instance = null;
         }
 
         private bool m_InputEnable = true;
-        public bool inputEnable => m_InputEnable;
+        public bool inputEnable
+        {
+            get
+            {
+                return m_InputEnable;
+            }
 
-        private UIRoot m_UIRoot;
-        public EventSystem eventSystem => m_UIRoot.eventSystem;
-        public UIHierarchy hierarchy => m_UIRoot.hierarchy;
+            set
+            {
+                if (m_InputEnable != value)
+                {
+                    m_InputEnable = value;
+                    eventSystem.enabled = value;
+                }
+            }
+        }
+
+        public UIRoot uiRoot { get; private set; }
+        public EventSystem eventSystem => uiRoot.eventSystem;
+        public UIHierarchy hierarchy => uiRoot.hierarchy;
         public UICamera uiCamera => hierarchy.uiCamera;
 
         private void OnInitialized()
         {
-            m_UIRoot = UnityObject.FindObjectOfType<UIRoot>();
-            if (m_UIRoot == null)
+            uiRoot = UnityObject.FindObjectOfType<UIRoot>();
+            if (uiRoot == null)
             {
                 DLogger.Error("The root of ui is not found");
             }
@@ -51,18 +63,9 @@ namespace DotEngine.UI
             m_InputEnable = eventSystem.enabled;
         }
 
-        public void SetInputEnable(bool enable)
-        {
-            if (m_InputEnable != enable)
-            {
-                m_InputEnable = enable;
-                eventSystem.enabled = enable;
-            }
-        }
-
         private void OnDestroyed()
         {
-            m_UIRoot = null;
+            uiRoot = null;
         }
     }
 }

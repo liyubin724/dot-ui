@@ -2,11 +2,11 @@
 {
     public class UIPanel : UIContainer<UIWidget>
     {
-        protected override void OnChildAdded(UIWidget child)
+        protected override void OnItemAdded(UIWidget child)
         {
         }
 
-        protected override void OnChildRemoved(UIWidget child)
+        protected override void OnItemRemoved(UIWidget child)
         {
         }
     }

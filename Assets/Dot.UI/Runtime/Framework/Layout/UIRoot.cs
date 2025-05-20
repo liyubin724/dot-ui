@@ -11,6 +11,8 @@ namespace DotEngine.UI
         [SerializeField]
         private UIHierarchy[] m_Hierarchies = new UIHierarchy[0];
 
+        private Dictionary<string, UIHierarchy> m_HierarchyDic = new Dictionary<string, UIHierarchy>();
+
         public EventSystem eventSystem => m_EventSystem;
 
         public UIHierarchy hierarchy
@@ -25,7 +27,13 @@ namespace DotEngine.UI
             }
         }
 
-        private Dictionary<string, UIHierarchy> m_HierarchyDic = new Dictionary<string, UIHierarchy>();
+        public UIHierarchy this[string identity]
+        {
+            get
+            {
+                return GetHierarchy(identity);
+            }
+        }
 
         private void Awake()
         {

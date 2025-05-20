@@ -74,6 +74,13 @@ namespace DotEngine.UI
         private UIStage[] m_Stages = new UIStage[0];
 
         private Dictionary<string, UIStage> m_StageDic = new Dictionary<string, UIStage>();
+        public UIStage this[string identity]
+        {
+            get
+            {
+                return GetStage(identity);
+            }
+        }
 
         public new GameObject gameObject { get; private set; }
         public new Transform transform { get; private set; }
@@ -81,7 +88,6 @@ namespace DotEngine.UI
         public Canvas canvas { get; private set; }
         public CanvasScaler scaler { get; private set; }
         public GraphicRaycaster raycaster { get; private set; }
-
 
         public void Initialize()
         {

@@ -1,53 +1,51 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using DotEngine.Core.Pool;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DotEngine.UI
 {
-    public abstract class UIContainer<TChild> : UIWidget where TChild : UIWidget
+    public abstract class UIContainer<TElement> : UIElement where TElement : UIElement
     {
         [SerializeReference]
-        public List<TChild> m_Childs = new List<TChild>();
+        public List<TElement> m_Items = new List<TElement>();
 
-        public TChild this[string identity]
+        private List<string> m_ItemIdentities = new List<string>();
+
+        public TElement this[string identity]
         {
             get
             {
-                return GetChild(identity);
+                return GetItem(identity);
             }
         }
 
-        public TChild this[int index]
+        public TElement this[int index]
         {
             get
             {
-                if (index >= 0 && index < m_Childs.Count)
+                if (index >= 0 && index < m_Items.Count)
                 {
-                    return m_Childs[index];
+                    return m_Items[index];
                 }
                 return null;
             }
         }
 
-        public string[] GetChildNames()
+        public string[] GetItemIdentities()
         {
-            return (
-                from child in m_Childs
-                where !string.IsNullOrEmpty(child.identity)
-                select child.identity
-                ).ToArray();
+            return m_ItemIdentities.ToArray();
         }
 
-        public int GetChildCount()
+        public int GetItemCount()
         {
-            return m_Childs.Count;
+            return m_Items.Count;
         }
 
-        public bool HasChild(string identity)
+        public bool HasItem(string identity)
         {
-            foreach (var child in m_Childs)
+            foreach (var item in m_Items)
             {
-                if (child != null && child.identity == identity)
+                if (item != null && item.identity == identity)
                 {
                     return true;
                 }
@@ -56,84 +54,99 @@ namespace DotEngine.UI
             return false;
         }
 
-        public TChild GetChild(string identity)
+        public TElement GetItem(string identity)
         {
-            foreach (var child in m_Childs)
+            foreach (var item in m_Items)
             {
-                if (child != null && child.identity == identity)
+                if (item != null && item.identity == identity)
                 {
-                    return child;
+                    return item;
                 }
             }
+
             return null;
         }
 
-        public TChild[] GetChilds(string identity)
+        public TElement[] GetItems(string identity)
         {
-            return (
-                    from child in m_Childs
-                    where child != null && child.identity == identity
-                    select child
-                ).ToArray();
+            var list = ListPool<TElement>.Pop();
+            foreach (var item in m_Items)
+            {
+                if (item != null && item.identity == identity)
+                {
+                    list.Add(item);
+                }
+            }
+
+            var widgets = list.ToArray();
+            ListPool<TElement>.Push(list);
+            return widgets;
         }
 
-        public void AddChild(TChild child)
+        public void AddItem(TElement item)
         {
-            InsertChild(child, m_Childs.Count);
+            InsertItem(item, m_Items.Count);
         }
 
-        public void InsertChild(TChild child, int index)
+        public void InsertItem(TElement item, int index)
         {
             if (index < 0)
             {
                 index = 0;
             }
-            else if (index >= m_Childs.Count)
+            else if (index >= m_Items.Count)
             {
-                index = m_Childs.Count;
+                index = m_Items.Count;
             }
 
-            m_Childs.Insert(index, child);
+            m_Items.Insert(index, item);
 
             if (isInited)
             {
-                if (!child.isInited)
+                if (!item.isInited)
                 {
-                    child.Initialize();
+                    item.Initialize();
                 }
             }
 
             if (isActived)
             {
-                if (!child.isActived)
+                if (!item.isActived)
                 {
-                    child.Activate();
+                    item.Activate();
                 }
             }
-            child.parent = gameObject;
-            child.rectTransform.SetSiblingIndex(index);
+            item.parent = gameObject;
 
-            OnChildAdded(child);
+            for (int i = index; i < m_Items.Count; i++)
+            {
+                if (m_Items[i] != null)
+                {
+                    m_Items[i].SetIndex(i);
+                }
+            }
+
+            OnItemAdded(item);
         }
 
-        public void RemoveChild(string identity, bool isAll = true)
+        public void RemoveItem(string identity, bool isAll = true)
         {
             int index = 0;
             bool isRemoved = false;
-            for (int i = 0; i < m_Childs.Count;)
+            for (int i = 0; i < m_Items.Count;)
             {
-                var child = m_Childs[i];
-                if (child == null || child.identity == identity)
+                var item = m_Items[i];
+                if (item == null || item.identity == identity)
                 {
-                    m_Childs.RemoveAt(i);
+                    m_Items.RemoveAt(i);
                     isRemoved = true;
 
-                    OnChildRemoved(child);
+                    OnItemRemoved(item);
 
-                    if (child != null)
+                    if (item != null)
                     {
-                        child.Destroy();
-                        Destroy(child);
+                        item.Destroy();
+                        Destroy(item);
                     }
 
                     if (!isAll)
@@ -145,53 +158,69 @@ namespace DotEngine.UI
                 {
                     if (isRemoved)
                     {
-                        child.rectTransform.SetSiblingIndex(index);
+                        item.SetIndex(index);
                     }
-                    i = i + 1;
-                    index = index + 1;
+
+                    i++;
+                    index++;
                 }
             }
         }
 
+        public void SetItemIndex(TElement item, int index)
+        {
+            m_Items.IndexOf(item);
+        }
+
+        public void SetItemFirst(TElement item)
+        {
+            SetItemIndex(item, 0);
+        }
+
+        public void SetItemLast(TElement item)
+        {
+            SetItemIndex(item, m_Items.Count);
+        }
+
         protected override void OnInitialized()
         {
-            for (int i = 0; i < m_Childs.Count - 1; i++)
+            for (int i = 0; i < m_Items.Count - 1; i++)
             {
-                var child = m_Childs[i];
-                if (child != null)
+                var item = m_Items[i];
+                if (item != null)
                 {
-                    child.Initialize();
-                    child.rectTransform.SetSiblingIndex(i);
+                    item.Initialize();
+                    item.SetIndex(i);
                 }
             }
         }
 
         protected override void OnActivated()
         {
-            foreach (var child in m_Childs)
+            foreach (var item in m_Items)
             {
-                child?.Activate();
+                item?.Activate();
             }
         }
 
         protected override void OnDeactivated()
         {
-            foreach (var child in m_Childs)
+            foreach (var item in m_Items)
             {
-                child?.Deactivate();
+                item?.Deactivate();
             }
         }
 
         protected override void OnDestroyed()
         {
-            foreach (var child in m_Childs)
+            foreach (var item in m_Items)
             {
-                child?.Destroy();
+                item?.Destroy();
             }
-            m_Childs.Clear();
+            m_Items.Clear();
         }
 
-        protected abstract void OnChildAdded(TChild child);
-        protected abstract void OnChildRemoved(TChild child);
+        protected abstract void OnItemAdded(TElement item);
+        protected abstract void OnItemRemoved(TElement item);
     }
 }

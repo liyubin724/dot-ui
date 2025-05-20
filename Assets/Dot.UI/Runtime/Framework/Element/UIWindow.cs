@@ -7,11 +7,11 @@ namespace DotEngine.UI
     [RequireComponent(typeof(GraphicRaycaster))]
     public class UIWindow : UIContainer<UIPanel>
     {
-        protected override void OnChildAdded(UIPanel child)
+        protected override void OnItemAdded(UIPanel child)
         {
         }
 
-        protected override void OnChildRemoved(UIPanel child)
+        protected override void OnItemRemoved(UIPanel child)
         {
         }
     }
