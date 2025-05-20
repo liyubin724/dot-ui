@@ -31,19 +31,36 @@ namespace DotEngine.UI
             }
         }
 
+        private int m_OrderIndex = 0;
+        public int orderIndex
+        {
+            get
+            {
+                return m_OrderIndex;
+            }
+            set
+            {
+                if (m_OrderIndex != value)
+                {
+                    m_OrderIndex = value;
+                    SetSiblingIndex(value);
+                }
+            }
+        }
+
         public void SetSiblingIndex(int index)
         {
-            rectTransform.SetSiblingIndex(index);
+            m_Panel?.SetItemOrder(this, index);
         }
 
         public void SetAsFirstSibling()
         {
-
+            m_Panel?.SetItemOrderAsFirst(this);
         }
 
         public void SetAsLastSibling()
         {
-
+            m_Panel?.SetItemOrderAsLast(this);
         }
 
         protected override void OnInitialized()

@@ -9,8 +9,6 @@ namespace DotEngine.UI
         [SerializeReference]
         public List<TElement> m_Items = new List<TElement>();
 
-        private List<string> m_ItemIdentities = new List<string>();
-
         public TElement this[string identity]
         {
             get
@@ -33,7 +31,15 @@ namespace DotEngine.UI
 
         public string[] GetItemIdentities()
         {
-            return m_ItemIdentities.ToArray();
+            var list = ListPool<string>.Pop();
+            foreach (var item in m_Items)
+            {
+                list.Add(item?.identity);
+            }
+
+            var result = list.ToArray();
+            ListPool<string>.Push(list);
+            return result;
         }
 
         public int GetItemCount()
@@ -116,17 +122,16 @@ namespace DotEngine.UI
                     item.Activate();
                 }
             }
-            item.parent = gameObject;
+
+            OnItemAdded(item);
 
             for (int i = index; i < m_Items.Count; i++)
             {
                 if (m_Items[i] != null)
                 {
-                    m_Items[i].SetIndex(i);
+                    SetItemOrder(m_Items[i], i);
                 }
             }
-
-            OnItemAdded(item);
         }
 
         public void RemoveItem(string identity, bool isAll = true)
@@ -158,7 +163,7 @@ namespace DotEngine.UI
                 {
                     if (isRemoved)
                     {
-                        item.SetIndex(index);
+                        SetItemOrder(item, index);
                     }
 
                     i++;
@@ -167,19 +172,24 @@ namespace DotEngine.UI
             }
         }
 
-        public void SetItemIndex(TElement item, int index)
+        public void SetItemOrder(TElement item, int order)
         {
-            m_Items.IndexOf(item);
+            for (int i = 0; i < m_Items.Count; i++)
+            {
+                if (m_Items[i] == item)
+                {
+                }
+            }
         }
 
-        public void SetItemFirst(TElement item)
+        public void SetItemOrderAsFirst(TElement item)
         {
-            SetItemIndex(item, 0);
+            SetItemOrder(item, 0);
         }
 
-        public void SetItemLast(TElement item)
+        public void SetItemOrderAsLast(TElement item)
         {
-            SetItemIndex(item, m_Items.Count);
+            SetItemOrder(item, m_Items.Count);
         }
 
         protected override void OnInitialized()
@@ -190,7 +200,8 @@ namespace DotEngine.UI
                 if (item != null)
                 {
                     item.Initialize();
-                    item.SetIndex(i);
+
+                    SetItemOrder(item, i);
                 }
             }
         }
@@ -222,5 +233,10 @@ namespace DotEngine.UI
 
         protected abstract void OnItemAdded(TElement item);
         protected abstract void OnItemRemoved(TElement item);
+
+        protected override void OnIdentityChanged(string from, string to) { }
+        protected override void OnLayerChanged(int from, int to) { }
+        protected override void OnVisibleChanged() { }
+        protected override void OnParentChanged(GameObject from, GameObject to) { }
     }
 }

@@ -90,6 +90,26 @@ namespace DotEngine.UI
 
         protected abstract void OnParentChanged(GameObject from, GameObject to);
 
+        private int m_OrderIndex = 0;
+        public int orderIndex
+        {
+            get
+            {
+                return m_OrderIndex;
+            }
+            set
+            {
+                if (m_OrderIndex != value)
+                {
+                    m_OrderIndex = value;
+                }
+            }
+        }
+
+        public abstract void SetOrderIndex(int index);
+        public abstract void SetOrderAsFirst();
+        public abstract void SetOrderAsLast();
+
         public new GameObject gameObject { get; private set; }
         public new Transform transform { get; private set; }
         public RectTransform rectTransform { get; private set; }
