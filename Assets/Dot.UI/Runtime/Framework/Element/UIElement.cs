@@ -90,19 +90,15 @@ namespace DotEngine.UI
 
         protected abstract void OnParentChanged(GameObject from, GameObject to);
 
-        private int m_OrderIndex = 0;
         public int orderIndex
         {
             get
             {
-                return m_OrderIndex;
+                return rectTransform.GetSiblingIndex();
             }
             set
             {
-                if (m_OrderIndex != value)
-                {
-                    m_OrderIndex = value;
-                }
+                rectTransform.SetSiblingIndex(value);
             }
         }
 

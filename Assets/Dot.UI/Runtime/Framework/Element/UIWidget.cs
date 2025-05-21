@@ -18,6 +18,7 @@ namespace DotEngine.UI
                     if (value == null)
                     {
                         OnDetachFromPanel();
+
                         m_Panel = null;
                         parent = null;
                     }
@@ -25,42 +26,26 @@ namespace DotEngine.UI
                     {
                         m_Panel = value;
                         parent = m_Panel.gameObject;
+
                         OnAttachToPanel();
                     }
                 }
             }
         }
 
-        private int m_OrderIndex = 0;
-        public int orderIndex
+        public override void SetOrderIndex(int index)
         {
-            get
-            {
-                return m_OrderIndex;
-            }
-            set
-            {
-                if (m_OrderIndex != value)
-                {
-                    m_OrderIndex = value;
-                    SetSiblingIndex(value);
-                }
-            }
+            m_Panel?.SetChildOrder(this, index);
         }
 
-        public void SetSiblingIndex(int index)
+        public override void SetOrderAsFirst()
         {
-            m_Panel?.SetItemOrder(this, index);
+            m_Panel?.SetChildAsFirst(this);
         }
 
-        public void SetAsFirstSibling()
+        public override void SetOrderAsLast()
         {
-            m_Panel?.SetItemOrderAsFirst(this);
-        }
-
-        public void SetAsLastSibling()
-        {
-            m_Panel?.SetItemOrderAsLast(this);
+            m_Panel?.SetChildAsLast(this);
         }
 
         protected override void OnInitialized()

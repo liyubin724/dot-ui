@@ -1,40 +1,28 @@
-﻿using DotEngine.Core.Pool;
+﻿using DotEngine.Core;
+using DotEngine.Core.Pool;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace DotEngine.UI
 {
-    public abstract class UIContainer<TElement> : UIElement where TElement : UIElement
+    public abstract class UIContainer<TChild> : UIElement
+        where TChild : UIElement
     {
         [SerializeReference]
-        public List<TElement> m_Items = new List<TElement>();
+        public List<TChild> m_Childs = new List<TChild>();
 
-        public TElement this[string identity]
-        {
-            get
-            {
-                return GetItem(identity);
-            }
-        }
-
-        public TElement this[int index]
-        {
-            get
-            {
-                if (index >= 0 && index < m_Items.Count)
-                {
-                    return m_Items[index];
-                }
-                return null;
-            }
-        }
-
-        public string[] GetItemIdentities()
+        public string[] GetChildIdentities()
         {
             var list = ListPool<string>.Pop();
-            foreach (var item in m_Items)
+            foreach (var child in m_Childs)
             {
-                list.Add(item?.identity);
+                if (child != null)
+                {
+                    if (!string.IsNullOrEmpty(child.identity))
+                    {
+                        list.Add(child.identity);
+                    }
+                }
             }
 
             var result = list.ToArray();
@@ -42,16 +30,11 @@ namespace DotEngine.UI
             return result;
         }
 
-        public int GetItemCount()
+        public bool HasChild(string identity)
         {
-            return m_Items.Count;
-        }
-
-        public bool HasItem(string identity)
-        {
-            foreach (var item in m_Items)
+            foreach (var child in m_Childs)
             {
-                if (item != null && item.identity == identity)
+                if (child != null && child.identity == identity)
                 {
                     return true;
                 }
@@ -60,183 +43,263 @@ namespace DotEngine.UI
             return false;
         }
 
-        public TElement GetItem(string identity)
+        public TChild GetChild(string identity)
         {
-            foreach (var item in m_Items)
+            foreach (var child in m_Childs)
             {
-                if (item != null && item.identity == identity)
+                if (child != null && child.identity == identity)
                 {
-                    return item;
+                    return child;
                 }
             }
 
             return null;
         }
 
-        public TElement[] GetItems(string identity)
+        public TChild[] GetChilds(string identity)
         {
-            var list = ListPool<TElement>.Pop();
-            foreach (var item in m_Items)
+            var list = ListPool<TChild>.Pop();
+            foreach (var child in m_Childs)
             {
-                if (item != null && item.identity == identity)
+                if (child != null && child.identity == identity)
                 {
-                    list.Add(item);
+                    list.Add(child);
                 }
             }
 
             var widgets = list.ToArray();
-            ListPool<TElement>.Push(list);
+            ListPool<TChild>.Push(list);
             return widgets;
         }
 
-        public void AddItem(TElement item)
+        public void AddChild(TChild child)
         {
-            InsertItem(item, m_Items.Count);
+            InsertChild(child, m_Childs.Count);
         }
 
-        public void InsertItem(TElement item, int index)
+        public void InsertChild(TChild child, int index)
         {
             if (index < 0)
             {
                 index = 0;
             }
-            else if (index >= m_Items.Count)
+            else if (index >= m_Childs.Count)
             {
-                index = m_Items.Count;
+                index = m_Childs.Count;
             }
 
-            m_Items.Insert(index, item);
+            m_Childs.Insert(index, child);
 
             if (isInited)
             {
-                if (!item.isInited)
+                if (!child.isInited)
                 {
-                    item.Initialize();
+                    child.Initialize();
                 }
             }
 
             if (isActived)
             {
-                if (!item.isActived)
+                if (!child.isActived)
                 {
-                    item.Activate();
+                    child.Activate();
                 }
             }
 
-            OnItemAdded(item);
+            child.parent = gameObject;
 
-            for (int i = index; i < m_Items.Count; i++)
+            OnChildAdded(child);
+
+            for (int i = index; i < m_Childs.Count; i++)
             {
-                if (m_Items[i] != null)
+                if (m_Childs[i] != null)
                 {
-                    SetItemOrder(m_Items[i], i);
+                    m_Childs[i].orderIndex = i;
                 }
             }
         }
 
-        public void RemoveItem(string identity, bool isAll = true)
+        public void RemoveItem(string identity, bool isRemoveAll = true)
         {
             int index = 0;
             bool isRemoved = false;
-            for (int i = 0; i < m_Items.Count;)
+            while (index < m_Childs.Count)
             {
-                var item = m_Items[i];
-                if (item == null || item.identity == identity)
+                var child = m_Childs[index];
+                if (child == null)
                 {
-                    m_Items.RemoveAt(i);
-                    isRemoved = true;
+                    m_Childs.RemoveAt(index);
+                    continue;
+                }
 
-                    OnItemRemoved(item);
-
-                    if (item != null)
+                if (!isRemoved || isRemoveAll)
+                {
+                    if (child.identity == identity)
                     {
-                        item.Destroy();
-                        Destroy(item);
-                    }
+                        isRemoved = true;
+                        m_Childs.RemoveAt(index);
 
-                    if (!isAll)
-                    {
-                        break;
+                        OnChildRemoved(child);
+
+                        child.Destroy();
+                        Destroy(child.gameObject);
+
+                        continue;
                     }
                 }
-                else
-                {
-                    if (isRemoved)
-                    {
-                        SetItemOrder(item, index);
-                    }
 
-                    i++;
-                    index++;
+                child.orderIndex = index;
+                index++;
+            }
+        }
+
+        public void SetChildOrder(TChild child, int order)
+        {
+            int indexOf = m_Childs.IndexOf(child);
+            if (indexOf < 0)
+            {
+                return;
+            }
+
+            if (indexOf == order)
+            {
+                return;
+            }
+
+            m_Childs.Insert(order, child);
+            if (indexOf > order)
+            {
+                m_Childs.RemoveAt(indexOf + 1);
+                for (int i = order; i < m_Childs.Count; i++)
+                {
+                    var tChild = m_Childs[i];
+                    if (tChild != null)
+                    {
+                        tChild.orderIndex = i;
+                    }
+                }
+            }
+            else
+            {
+                m_Childs.RemoveAt(indexOf);
+                for (int i = indexOf; i < m_Childs.Count; i++)
+                {
+                    var tChild = m_Childs[i];
+                    if (tChild != null)
+                    {
+                        tChild.orderIndex = i;
+                    }
                 }
             }
         }
 
-        public void SetItemOrder(TElement item, int order)
+        public void SetChildAsFirst(TChild child)
         {
-            for (int i = 0; i < m_Items.Count; i++)
+            int indexOf = m_Childs.IndexOf(child);
+            if (indexOf < 0)
             {
-                if (m_Items[i] == item)
+                return;
+            }
+
+            m_Childs.RemoveAt(indexOf);
+            m_Childs.Insert(0, child);
+            for (int i = 0; i < indexOf; i++)
+            {
+                var tChild = m_Childs[i];
+                if (tChild != null)
                 {
+                    tChild.orderIndex = i;
                 }
             }
         }
 
-        public void SetItemOrderAsFirst(TElement item)
+        public void SetChildAsLast(TChild child)
         {
-            SetItemOrder(item, 0);
-        }
+            int indexOf = m_Childs.IndexOf(child);
+            if (indexOf < 0)
+            {
+                return;
+            }
 
-        public void SetItemOrderAsLast(TElement item)
-        {
-            SetItemOrder(item, m_Items.Count);
+            m_Childs.RemoveAt(indexOf);
+            m_Childs.Add(child);
+            for (int i = indexOf; i < m_Childs.Count; i++)
+            {
+                var tChild = m_Childs[i];
+                if (tChild != null)
+                {
+                    tChild.orderIndex = i;
+                }
+            }
         }
 
         protected override void OnInitialized()
         {
-            for (int i = 0; i < m_Items.Count - 1; i++)
+            for (int i = 0; i < m_Childs.Count - 1; i++)
             {
-                var item = m_Items[i];
-                if (item != null)
+                var child = m_Childs[i];
+                if (child == null)
                 {
-                    item.Initialize();
-
-                    SetItemOrder(item, i);
+                    DLogger.Error("The child of container is null");
+                    continue;
                 }
+                if (string.IsNullOrEmpty(child.identity))
+                {
+                    DLogger.Error("The identity of child is empty");
+                    continue;
+                }
+
+                child.Initialize();
+                child.parent = gameObject;
+
+                OnChildAdded(child);
+
+                child.orderIndex = i;
             }
         }
 
         protected override void OnActivated()
         {
-            foreach (var item in m_Items)
+            foreach (var child in m_Childs)
             {
-                item?.Activate();
+                child?.Activate();
             }
         }
 
         protected override void OnDeactivated()
         {
-            foreach (var item in m_Items)
+            foreach (var child in m_Childs)
             {
-                item?.Deactivate();
+                child?.Deactivate();
             }
         }
 
         protected override void OnDestroyed()
         {
-            foreach (var item in m_Items)
+            foreach (var child in m_Childs)
             {
-                item?.Destroy();
+                child?.Destroy();
             }
-            m_Items.Clear();
+            m_Childs.Clear();
         }
 
-        protected abstract void OnItemAdded(TElement item);
-        protected abstract void OnItemRemoved(TElement item);
+        protected override void OnIdentityChanged(string from, string to)
+        {
+        }
 
-        protected override void OnIdentityChanged(string from, string to) { }
-        protected override void OnLayerChanged(int from, int to) { }
-        protected override void OnVisibleChanged() { }
-        protected override void OnParentChanged(GameObject from, GameObject to) { }
+        protected override void OnLayerChanged(int from, int to)
+        {
+        }
+
+        protected override void OnVisibleChanged()
+        {
+        }
+
+        protected override void OnParentChanged(GameObject from, GameObject to)
+        {
+        }
+
+        protected abstract void OnChildAdded(TChild child);
+        protected abstract void OnChildRemoved(TChild child);
     }
 }
