@@ -1,5 +1,4 @@
 ﻿using DotEngine.Core;
-using DotEngine.Core.Pool;
 using UnityEngine.EventSystems;
 using UnityObject = UnityEngine.Object;
 
@@ -58,7 +57,7 @@ namespace DotEngine.UI
         public UIHierarchy hierarchy => uiRoot.hierarchy;
         public UICamera uiCamera => hierarchy.uiCamera;
 
-        private ObjectPool<UIWindowData> m_DataPool = null;
+        //private ObjectPool<UIWindowData> m_DataPool = null;
         private void OnInitialized()
         {
             uiRoot = UnityObject.FindObjectOfType<UIRoot>();
@@ -69,7 +68,7 @@ namespace DotEngine.UI
 
             m_InputEnable = eventSystem.enabled;
 
-            m_DataPool = new ObjectPool<UIWindowData>(() => new UIWindowData());
+            //m_DataPool = new ObjectPool<UIWindowData>(() => new UIWindowData());
         }
 
         public void OpenWindow()

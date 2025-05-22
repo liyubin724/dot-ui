@@ -42,17 +42,11 @@ namespace DotEngine.UI
             }
         }
 
-        public new GameObject gameObject { get; private set; }
-        public new Transform transform { get; private set; }
-        public RectTransform rectTransform { get; private set; }
+        public RectTransform rectTransform => (RectTransform)transform;
         public Canvas canvas { get; private set; }
 
         public void Initialize()
         {
-            gameObject = base.gameObject;
-            transform = base.transform;
-            rectTransform = (RectTransform)base.transform;
-
             if (canvas == null)
             {
                 canvas = GetComponent<Canvas>();
