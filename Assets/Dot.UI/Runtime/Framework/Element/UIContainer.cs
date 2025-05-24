@@ -5,6 +5,19 @@ using UnityEngine;
 
 namespace DotEngine.UI
 {
+    public enum UIContainerState
+    {
+        None = 0,
+        Initialized,
+        Activated,
+        Appearing,
+        Appeared,
+        Disappearing,
+        Disappeared,
+        Deactivated,
+        Destroyed,
+    }
+
     public abstract class UIContainer<TChild> : UIElement
         where TChild : UIElement
     {
@@ -98,6 +111,9 @@ namespace DotEngine.UI
                 }
             }
 
+            child.parent = gameObject;
+            OnChildAdded(child);
+
             if (isActived)
             {
                 if (!child.isActived)
@@ -105,10 +121,6 @@ namespace DotEngine.UI
                     child.Activate();
                 }
             }
-
-            child.parent = gameObject;
-
-            OnChildAdded(child);
 
             for (int i = index; i < m_Childs.Count; i++)
             {
@@ -233,8 +245,17 @@ namespace DotEngine.UI
             }
         }
 
+        private Animation m_Animation;
+        private Animator m_Animator;
+
         protected override void OnInitialized()
         {
+            m_Animation = GetComponent<Animation>();
+            if (m_Animation == null)
+            {
+                m_Animator = GetComponent<Animator>();
+            }
+
             for (int i = 0; i < m_Childs.Count - 1; i++)
             {
                 var child = m_Childs[i];
@@ -264,6 +285,38 @@ namespace DotEngine.UI
             {
                 child?.Activate();
             }
+
+            OnWillAppear();
+        }
+
+        protected virtual void OnWillAppear()
+        {
+
+        }
+
+        protected virtual void OnAppear()
+        {
+
+        }
+
+        protected virtual void OnAppeared()
+        {
+
+        }
+
+        protected virtual void OnWillDisappear()
+        {
+
+        }
+
+        protected virtual void OnDisappear()
+        {
+
+        }
+
+        protected virtual void OnDisappeared()
+        {
+
         }
 
         protected override void OnDeactivated()
@@ -301,5 +354,6 @@ namespace DotEngine.UI
 
         protected abstract void OnChildAdded(TChild child);
         protected abstract void OnChildRemoved(TChild child);
+
     }
 }

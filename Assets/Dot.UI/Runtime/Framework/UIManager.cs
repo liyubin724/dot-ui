@@ -1,14 +1,10 @@
 ﻿using DotEngine.Core;
 using UnityEngine.EventSystems;
+using SystemObject = System.Object;
 using UnityObject = UnityEngine.Object;
 
 namespace DotEngine.UI
 {
-    public class UIWindowData
-    {
-
-    }
-
     public class UIManager
     {
         private static UIManager sm_Instance;
@@ -57,7 +53,6 @@ namespace DotEngine.UI
         public UIHierarchy hierarchy => uiRoot.hierarchy;
         public UICamera uiCamera => hierarchy.uiCamera;
 
-        //private ObjectPool<UIWindowData> m_DataPool = null;
         private void OnInitialized()
         {
             uiRoot = UnityObject.FindObjectOfType<UIRoot>();
@@ -67,11 +62,33 @@ namespace DotEngine.UI
             }
 
             m_InputEnable = eventSystem.enabled;
-
-            //m_DataPool = new ObjectPool<UIWindowData>(() => new UIWindowData());
         }
 
-        public void OpenWindow()
+        public UIHierarchy GetHierarchy(string hierarchyIdentity)
+        {
+            if (uiRoot != null)
+            {
+                return uiRoot.GetHierarchy(hierarchyIdentity);
+            }
+            return null;
+        }
+
+        public UIStage GetStage(string hierarchyIdentity, string stageIdentity)
+        {
+            if (uiRoot != null)
+            {
+                return uiRoot.GetStage(hierarchyIdentity, stageIdentity);
+            }
+            return null;
+        }
+
+        public void OpenWindow(
+            string hierarchy,
+            string stage,
+            string identity,
+            string assetPath,
+            UIWindowMode mode,
+            SystemObject userdata)
         {
 
         }

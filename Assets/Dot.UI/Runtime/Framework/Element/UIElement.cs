@@ -74,15 +74,15 @@ namespace DotEngine.UI
         {
             get
             {
-                return transform.parent?.gameObject; ;
+                return m_CachedTransform.parent?.gameObject;
             }
 
             set
             {
-                var pGO = transform.parent.gameObject;
+                var pGO = m_CachedTransform.parent?.gameObject;
                 if (pGO != value)
                 {
-                    transform.SetParent(value?.transform, false);
+                    m_CachedTransform.SetParent(value?.transform, false);
                     OnParentChanged(pGO, value);
                 }
             }
@@ -94,11 +94,11 @@ namespace DotEngine.UI
         {
             get
             {
-                return rectTransform.GetSiblingIndex();
+                return m_CachedRectTransform.GetSiblingIndex();
             }
             set
             {
-                rectTransform.SetSiblingIndex(value);
+                m_CachedRectTransform.SetSiblingIndex(value);
             }
         }
 
@@ -106,9 +106,13 @@ namespace DotEngine.UI
         public abstract void SetOrderAsFirst();
         public abstract void SetOrderAsLast();
 
-        public new GameObject gameObject { get; private set; }
-        public new Transform transform { get; private set; }
-        public RectTransform rectTransform { get; private set; }
+        private GameObject m_CachedGameObject;
+        private Transform m_CachedTransform;
+        private RectTransform m_CachedRectTransform;
+
+        protected GameObject cachedGameObject => m_CachedGameObject;
+        protected Transform cachedTransform => m_CachedTransform;
+        protected RectTransform cachedRectTransform => m_CachedRectTransform;
 
         public virtual void Initialize()
         {
@@ -117,9 +121,9 @@ namespace DotEngine.UI
                 return;
             }
 
-            gameObject = base.gameObject;
-            transform = base.transform;
-            rectTransform = (RectTransform)transform;
+            m_CachedGameObject = gameObject;
+            m_CachedTransform = transform;
+            m_CachedRectTransform = (RectTransform)transform;
 
             OnInitialized();
             isInited = true;
@@ -131,15 +135,15 @@ namespace DotEngine.UI
         {
             if (!isInited)
             {
-                throw new InvalidOperationException("The Element is not inited");
+                throw new InvalidOperationException("The Element is not initialized");
             }
             if (isActived)
             {
                 return;
             }
 
-            OnActivated();
             isActived = true;
+            OnActivated();
         }
 
         protected abstract void OnActivated();
@@ -151,8 +155,8 @@ namespace DotEngine.UI
                 return;
             }
 
-            OnDeactivated();
             isActived = false;
+            OnDeactivated();
         }
 
         protected abstract void OnDeactivated();
