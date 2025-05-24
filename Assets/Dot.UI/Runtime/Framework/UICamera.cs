@@ -6,21 +6,25 @@ namespace DotEngine.UI
     public class UICamera : MonoBehaviour
     {
         [SerializeField]
-        private Camera m_Camera;
+        private Camera m_CachedCamera;
 
-        public new Camera camera
+        public Camera cachedCamera
         {
             get
             {
-                return m_Camera;
+                return m_CachedCamera;
+            }
+            set
+            {
+                m_CachedCamera = value;
             }
         }
 
         private void Awake()
         {
-            if (m_Camera == null)
+            if (m_CachedCamera == null)
             {
-                m_Camera = GetComponent<Camera>();
+                m_CachedCamera = GetComponent<Camera>();
             }
         }
     }

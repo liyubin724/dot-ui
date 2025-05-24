@@ -1,3 +1,4 @@
+using DotEngine.Core;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,6 +29,20 @@ namespace DotEngine.UI
         }
 
         [SerializeField]
+        public UICamera m_UICamera;
+        public UICamera uiCamera
+        {
+            get
+            {
+                return m_UICamera;
+            }
+            set
+            {
+                m_UICamera = value;
+            }
+        }
+
+        [SerializeField]
         private bool m_Visible = true;
         public bool visible
         {
@@ -41,75 +56,63 @@ namespace DotEngine.UI
                 {
                     m_Visible = value;
 
-                    canvas.enabled = value;
+                    cachedCanvas.enabled = value;
                 }
-            }
-        }
-
-        [SerializeField]
-        public UICamera m_UICamera;
-        public UICamera uiCamera
-        {
-            get
-            {
-                return m_UICamera;
-            }
-            set
-            {
-                if (m_UICamera != value)
-                {
-                    m_UICamera = value;
-                }
-            }
-        }
-        public new Camera camera
-        {
-            get
-            {
-                return m_UICamera.camera;
             }
         }
 
         [SerializeField]
         private UIStage[] m_Stages = new UIStage[0];
 
-        private Dictionary<string, UIStage> m_StageDic = new Dictionary<string, UIStage>();
-        public UIStage this[string identity]
-        {
-            get
-            {
-                return GetStage(identity);
-            }
-        }
+        public GameObject cachedGameObject { get; private set; }
+        public Transform cachedTransform { get; private set; }
+        public RectTransform cachedRectTransform { get; private set; }
+        public Canvas cachedCanvas { get; private set; }
+        public CanvasScaler cachedScaler { get; private set; }
+        public GraphicRaycaster cachedRaycaster { get; private set; }
+        public Camera cachedCamera => m_UICamera?.cachedCamera;
 
-        public RectTransform rectTransform => (RectTransform)transform;
-        public Canvas canvas { get; private set; }
-        public CanvasScaler scaler { get; private set; }
-        public GraphicRaycaster raycaster { get; private set; }
+        private Dictionary<string, UIStage> m_StageDic = new Dictionary<string, UIStage>();
+
+        public string[] stageIdentities { get; private set; }
 
         public void Initialize()
         {
-            canvas = GetComponent<Canvas>();
-            scaler = GetComponent<CanvasScaler>();
-            raycaster = GetComponent<GraphicRaycaster>();
+            cachedGameObject = gameObject;
+            cachedTransform = transform;
+            cachedRectTransform = (RectTransform)transform;
+            cachedCanvas = cachedGameObject.GetComponent<Canvas>();
+            cachedScaler = cachedGameObject.GetComponent<CanvasScaler>();
+            cachedRaycaster = cachedGameObject.GetComponent<GraphicRaycaster>();
 
             var goName = $"UI {m_Identity} Hierarchy";
-            if (gameObject.name != goName)
+            if (cachedGameObject.name != goName)
             {
-                gameObject.name = goName;
+                cachedGameObject.name = goName;
             }
 
-            if (canvas.enabled != m_Visible)
+            if (cachedCanvas.enabled != m_Visible)
             {
-                canvas.enabled = m_Visible;
+                cachedCanvas.enabled = m_Visible;
             }
 
             if (m_Stages != null && m_Stages.Length > 0)
             {
-                foreach (var stage in m_Stages)
+                stageIdentities = new string[m_Stages.Length];
+                for (int i = 0; i < m_Stages.Length; i++)
                 {
-                    stage.Initialize();
-                    m_StageDic.Add(stage.identity, stage);
+                    var stage = m_Stages[i];
+                    if (!string.IsNullOrEmpty(stage.identity))
+                    {
+                        stage.Initialize();
+
+                        stageIdentities[i] = stage.identity;
+                        m_StageDic.Add(stage.identity, stage);
+                    }
+                    else
+                    {
+                        DLogger.Error("The identity of stage is empty");
+                    }
                 }
             }
         }

@@ -5,19 +5,6 @@ using UnityEngine;
 
 namespace DotEngine.UI
 {
-    public enum UIContainerState
-    {
-        None = 0,
-        Initialized,
-        Activated,
-        Appearing,
-        Appeared,
-        Disappearing,
-        Disappeared,
-        Deactivated,
-        Destroyed,
-    }
-
     public abstract class UIContainer<TChild> : UIElement
         where TChild : UIElement
     {
@@ -285,38 +272,6 @@ namespace DotEngine.UI
             {
                 child?.Activate();
             }
-
-            OnWillAppear();
-        }
-
-        protected virtual void OnWillAppear()
-        {
-
-        }
-
-        protected virtual void OnAppear()
-        {
-
-        }
-
-        protected virtual void OnAppeared()
-        {
-
-        }
-
-        protected virtual void OnWillDisappear()
-        {
-
-        }
-
-        protected virtual void OnDisappear()
-        {
-
-        }
-
-        protected virtual void OnDisappeared()
-        {
-
         }
 
         protected override void OnDeactivated()

@@ -1,5 +1,5 @@
 ﻿using DotEngine.Core;
-using UnityEngine.EventSystems;
+using System.Collections.Generic;
 using SystemObject = System.Object;
 using UnityObject = UnityEngine.Object;
 
@@ -43,25 +43,47 @@ namespace DotEngine.UI
                 if (m_InputEnable != value)
                 {
                     m_InputEnable = value;
-                    eventSystem.enabled = value;
+
+                    if (uiRoot != null && uiRoot.eventSystem != null)
+                    {
+                        uiRoot.eventSystem.enabled = value;
+                    }
                 }
             }
         }
 
         public UIRoot uiRoot { get; private set; }
-        public EventSystem eventSystem => uiRoot.eventSystem;
-        public UIHierarchy hierarchy => uiRoot.hierarchy;
-        public UICamera uiCamera => hierarchy.uiCamera;
+
+        private Dictionary<string, Dictionary<string, List<UIWindowAgent>>> m_AgentDic = new Dictionary<string, Dictionary<string, List<UIWindowAgent>>>();
 
         private void OnInitialized()
         {
             uiRoot = UnityObject.FindObjectOfType<UIRoot>();
-            if (uiRoot == null)
+            if (uiRoot != null)
+            {
+                m_InputEnable = uiRoot.eventSystem.enabled;
+
+                var hierarchyIdentities = uiRoot.hierarchyIdentities;
+                foreach (var hIdentity in hierarchyIdentities)
+                {
+                    var hierarchy = uiRoot.GetHierarchy(hIdentity);
+                    if (hierarchy != null)
+                    {
+                        var agentDic = new Dictionary<string, List<UIWindowAgent>>();
+                        m_AgentDic.Add(hIdentity, agentDic);
+
+                        var sIdentities = hierarchy.stageIdentities;
+                        foreach (var sIdentity in sIdentities)
+                        {
+                            agentDic.Add(sIdentity, new List<UIWindowAgent>());
+                        }
+                    }
+                }
+            }
+            else
             {
                 DLogger.Error("The root of ui is not found");
             }
-
-            m_InputEnable = eventSystem.enabled;
         }
 
         public UIHierarchy GetHierarchy(string hierarchyIdentity)

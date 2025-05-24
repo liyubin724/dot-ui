@@ -1,3 +1,4 @@
+using DotEngine.Core.Extensions;
 using UnityEngine;
 
 namespace DotEngine.UI
@@ -37,34 +38,35 @@ namespace DotEngine.UI
                 {
                     m_Visible = visible;
 
-                    canvas.enabled = m_Visible;
+                    cachedCanvas.enabled = m_Visible;
                 }
             }
         }
 
-        public RectTransform rectTransform => (RectTransform)transform;
-        public Canvas canvas { get; private set; }
+        public GameObject cachedGameObject { get; private set; }
+        public Transform cachedTransform { get; private set; }
+        public RectTransform cachedRectTransform { get; private set; }
+        public Canvas cachedCanvas { get; private set; }
 
         public void Initialize()
         {
-            if (canvas == null)
+            cachedGameObject = gameObject;
+            cachedTransform = transform;
+            cachedRectTransform = (RectTransform)transform;
+            if (cachedCanvas == null)
             {
-                canvas = GetComponent<Canvas>();
-                if (canvas == null)
-                {
-                    canvas = gameObject.AddComponent<Canvas>();
-                }
+                cachedCanvas = cachedGameObject.GetOrAddComponent<Canvas>();
             }
 
             var goName = $"UI {m_Identity} Stage";
             if (name != goName)
             {
-                gameObject.name = goName;
+                cachedGameObject.name = goName;
             }
 
-            if (canvas.enabled != m_Visible)
+            if (cachedCanvas.enabled != m_Visible)
             {
-                canvas.enabled = m_Visible;
+                cachedCanvas.enabled = m_Visible;
             }
         }
     }

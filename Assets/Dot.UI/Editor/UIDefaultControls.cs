@@ -169,7 +169,7 @@ namespace DotEditor.UI
 
             var hierarchyCanvas = hierarchyGo.GetComponent<Canvas>();
             hierarchyCanvas.renderMode = RenderMode.ScreenSpaceCamera;
-            hierarchyCanvas.worldCamera = uiCamera.camera;
+            hierarchyCanvas.worldCamera = uiCamera.GetComponent<Camera>();
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_Canvas", hierarchyCanvas);
 
             var canvasScaler = hierarchyGo.GetComponent<CanvasScaler>();
@@ -213,7 +213,7 @@ namespace DotEditor.UI
             camera.farClipPlane = 1000;
 
             var uiCamera = uiCameraGO.AddComponent<UICamera>();
-            ReflectionUtility.TrySetFieldValue(uiCamera, "m_Camera", camera);
+            ReflectionUtility.TrySetFieldValue(uiCamera, "m_CachedCamera", camera);
 
             Undo.RegisterCreatedObjectUndo(uiCameraGO, "Create " + uiCameraGO.name);
 

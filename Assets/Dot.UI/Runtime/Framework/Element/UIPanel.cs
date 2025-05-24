@@ -1,5 +1,8 @@
-﻿namespace DotEngine.UI
+﻿using UnityEngine;
+
+namespace DotEngine.UI
 {
+    [RequireComponent(typeof(Canvas))]
     public class UIPanel : UIContainer<UIWidget>
     {
         private UIWindow m_Window;
