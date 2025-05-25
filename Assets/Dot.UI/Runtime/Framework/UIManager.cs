@@ -55,6 +55,7 @@ namespace DotEngine.UI
         public UIRoot uiRoot { get; private set; }
 
         private Dictionary<string, Dictionary<string, List<UIWindowAgent>>> m_AgentDic = new Dictionary<string, Dictionary<string, List<UIWindowAgent>>>();
+        private Dictionary<string, UIWindowAgent> m_WindowDic = new Dictionary<string, UIWindowAgent>();
 
         private void OnInitialized()
         {
@@ -104,6 +105,16 @@ namespace DotEngine.UI
             return null;
         }
 
+        public bool HasWindow(string identity)
+        {
+            if (m_WindowDic.TryGetValue(identity, out var agent))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public void OpenWindow(
             string hierarchy,
             string stage,
@@ -115,8 +126,15 @@ namespace DotEngine.UI
 
         }
 
-        public void CloseWindow()
+        public void CloseWindow(string identity)
         {
+            if (!m_WindowDic.TryGetValue(identity, out var agent))
+            {
+                return;
+            }
+
+            var hierarchyIdentity = agent.hierarchy;
+            var stageIdentity = agent.stage;
 
         }
 

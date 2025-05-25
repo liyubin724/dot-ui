@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using SystemObject = System.Object;
 
 namespace DotEngine.UI
 {
@@ -7,6 +8,8 @@ namespace DotEngine.UI
     [RequireComponent(typeof(GraphicRaycaster))]
     public class UIWindow : UIContainer<UIPanel>
     {
+        public SystemObject userdata { get; set; }
+
         public override void SetOrderIndex(int index)
         {
         }
