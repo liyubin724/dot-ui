@@ -13,7 +13,7 @@ namespace DotEditor.UI
 
         public static AtlasPackerSetting LoadSetting(bool createIfNotExist = true)
         {
-            var setting = AssetDatabaseUtility.FindInstance<AtlasPackerSetting>();
+            var setting = AssetDatabaseUtility.FindAnyAsset<AtlasPackerSetting>();
             if (setting == null)
             {
                 setting = ScriptableObject.CreateInstance<AtlasPackerSetting>();
@@ -25,10 +25,10 @@ namespace DotEditor.UI
 
         public static AtlasPackerSetting LoadSetting(string assetDir)
         {
-            string[] settingPaths = AssetDatabaseUtility.FindAssetInFolder<AtlasPackerSetting>(assetDir);
-            if (settingPaths != null && settingPaths.Length > 0)
+            var setting = AssetDatabaseUtility.FindAssetInParent<AtlasPackerSetting>(assetDir);
+            if (setting != null)
             {
-                return AssetDatabase.LoadAssetAtPath<AtlasPackerSetting>(settingPaths[0]);
+                return setting;
             }
 
             return LoadSetting();
@@ -98,7 +98,7 @@ namespace DotEditor.UI
             if (AssetDatabase.IsValidFolder(atlasDirPath))
             {
                 string atlasName = spriteAssetInputDir.Substring(spriteAssetInputDir.LastIndexOf("/") + 1).ToLower();
-                string[] assetPaths = DirectoryUtility.GetAssetsByFileNameFilter(spriteAssetInputDir, true, null, new string[] { ".meta" });
+                string[] assetPaths = DirectoryUtility.FindPaths(spriteAssetInputDir, true);
 
                 List<Sprite> sprites = new List<Sprite>();
                 foreach (var assetPath in assetPaths)

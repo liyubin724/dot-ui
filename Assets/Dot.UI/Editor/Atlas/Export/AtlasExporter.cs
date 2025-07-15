@@ -120,7 +120,7 @@ namespace DotEditor.UI
                 return;
             }
 
-            var allAtlas = AssetDatabaseUtility.FindInstances<SpriteAtlas>();
+            var allAtlas = AssetDatabaseUtility.FindAllAsset<SpriteAtlas>();
 
             string dirPath = EditorUtility.OpenFolderPanel("Save Dir", "D:/", "");
             if (string.IsNullOrEmpty(dirPath))
