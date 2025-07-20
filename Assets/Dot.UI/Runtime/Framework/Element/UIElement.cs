@@ -1,13 +1,46 @@
-﻿using DotEngine.Core.Extensions;
+﻿using DotEngine.Core;
 using System;
 using UnityEngine;
 
 namespace DotEngine.UI
 {
+    public class UIArgData
+    {
+    }
+
+    public class UIInitializeArgData : UIArgData
+    {
+
+    }
+
+    public class UIActivateArgData : UIArgData
+    {
+
+    }
+
+    public class UIDeactivateArgData : UIArgData
+    {
+    }
+
+    public class UIDestroyArgData : UIArgData
+    {
+
+    }
+
     public abstract class UIElement : MonoBehaviour
     {
         [SerializeField]
         private string m_Identity;
+        [SerializeField]
+        private bool m_Visible = true;
+
+        private bool m_IsInited = false;
+        private bool m_IsActived = false;
+
+        private GameObject m_CachedGameObject;
+        private Transform m_CachedTransform;
+        private RectTransform m_CachedRectTransform;
+
         public string identity
         {
             get
@@ -16,167 +49,164 @@ namespace DotEngine.UI
             }
             set
             {
-                if (m_Identity != value)
+                if (m_Identity == identity)
                 {
-                    string oldIdentity = m_Identity;
-                    m_Identity = value;
-
-                    OnIdentityChanged(oldIdentity, value);
+                    return;
                 }
+
+                SetIdentity(value);
             }
         }
 
-        protected abstract void OnIdentityChanged(string from, string to);
+        protected virtual void OnIdentityChanged() { }
 
-        public bool isInited { get; private set; }
-        public bool isActived { get; private set; }
-
-        public int layer
+        public void SetIdentity(string identity)
         {
-            get
-            {
-                return gameObject.layer;
-            }
-            set
-            {
-                var oldLayer = gameObject.layer;
-                if (oldLayer != value)
-                {
-                    gameObject.SetLayer(value);
+            m_Identity = identity;
 
-                    OnLayerChanged(oldLayer, value);
-                }
+#if UNITY_EDITOR
+            if (!string.IsNullOrEmpty(m_Identity))
+            {
+                name = m_Identity;
             }
+#endif
+
+            OnIdentityChanged();
         }
 
-        protected abstract void OnLayerChanged(int from, int to);
+        public void SetIdentityWithoutNotify(string identity)
+        {
+            m_Identity = identity;
+#if UNITY_EDITOR
+            if (!string.IsNullOrEmpty(m_Identity))
+            {
+                name = m_Identity;
+            }
+#endif
+        }
 
         public bool visible
         {
             get
             {
-                return gameObject.activeInHierarchy;
+                return m_Visible;
             }
             set
             {
-                if (gameObject.activeInHierarchy != value)
+                if (m_Visible == value)
                 {
-                    gameObject.SetActive(value);
-
-                    OnVisibleChanged();
+                    return;
                 }
+
+                SetVisible(value);
             }
         }
 
-        protected abstract void OnVisibleChanged();
+        protected virtual void OnVisibleChanged() { }
 
-        public GameObject parent
+        public void SetVisible(bool visible)
         {
-            get
+            m_Visible = visible;
+
+            if (m_CachedGameObject.activeSelf != visible)
             {
-                return m_CachedTransform.parent?.gameObject;
+                m_CachedGameObject.SetActive(m_Visible);
             }
 
-            set
-            {
-                var pGO = m_CachedTransform.parent?.gameObject;
-                if (pGO != value)
-                {
-                    m_CachedTransform.SetParent(value?.transform, false);
-                    OnParentChanged(pGO, value);
-                }
-            }
+            OnVisibleChanged();
         }
 
-        protected abstract void OnParentChanged(GameObject from, GameObject to);
-
-        public int orderIndex
+        public void SetVisibleWithoutNotify(bool visible)
         {
-            get
+            m_Visible = visible;
+
+            if (m_CachedGameObject.activeSelf != visible)
             {
-                return m_CachedRectTransform.GetSiblingIndex();
-            }
-            set
-            {
-                m_CachedRectTransform.SetSiblingIndex(value);
+                m_CachedGameObject.SetActive(m_Visible);
             }
         }
 
-        public abstract void SetOrderIndex(int index);
-        public abstract void SetOrderAsFirst();
-        public abstract void SetOrderAsLast();
-
-        private GameObject m_CachedGameObject;
-        private Transform m_CachedTransform;
-        private RectTransform m_CachedRectTransform;
-
+        public bool isInited => m_IsInited;
+        public bool isActived => m_IsActived;
         protected GameObject cachedGameObject => m_CachedGameObject;
         protected Transform cachedTransform => m_CachedTransform;
         protected RectTransform cachedRectTransform => m_CachedRectTransform;
 
-        public virtual void Initialize()
+        public virtual void Initialize(UIInitializeArgData argData)
         {
             if (isInited)
             {
+                DLogger.Error("The element has been initialized");
                 return;
             }
 
             m_CachedGameObject = gameObject;
-            m_CachedTransform = transform;
-            m_CachedRectTransform = (RectTransform)transform;
+            m_CachedTransform = gameObject.transform;
+            m_CachedRectTransform = (RectTransform)gameObject.transform;
 
-            OnInitialized();
-            isInited = true;
+            m_IsInited = true;
+
+            OnInitialized(argData);
         }
 
-        protected abstract void OnInitialized();
+        protected abstract void OnInitialized(UIInitializeArgData argData);
 
-        public virtual void Activate()
+        public virtual void Activate(UIActivateArgData argData)
         {
-            if (!isInited)
+            if (!m_IsInited)
             {
                 throw new InvalidOperationException("The Element is not initialized");
             }
-            if (isActived)
+
+            if (m_IsActived)
             {
+                DLogger.Error("The element has been activated");
                 return;
             }
 
-            isActived = true;
-            OnActivated();
+            m_IsActived = true;
+
+            OnActivated(argData);
         }
 
-        protected abstract void OnActivated();
+        protected abstract void OnActivated(UIActivateArgData argData);
 
-        public virtual void Deactivate()
+        public virtual void Deactivate(UIDeactivateArgData argData)
         {
-            if (!isActived)
+            if (!m_IsInited)
             {
+                throw new InvalidOperationException("The Element is not initialized");
+            }
+
+            if (!m_IsActived)
+            {
+                DLogger.Error("The element has been deactivated");
                 return;
             }
 
-            isActived = false;
-            OnDeactivated();
+            m_IsActived = false;
+
+            OnDeactivated(argData);
         }
 
-        protected abstract void OnDeactivated();
+        protected abstract void OnDeactivated(UIDeactivateArgData argData);
 
-        public virtual void Destroy()
+        public virtual void Destroy(UIDestroyArgData argData)
         {
-            if (!isInited)
+            if (!m_IsInited)
             {
+                DLogger.Error("The element is not initialized");
                 return;
             }
 
-            if (isActived)
-            {
-                Deactivate();
-            }
+            OnDestroyed(argData);
+            m_IsInited = false;
 
-            OnDestroyed();
-            isInited = false;
+            m_CachedGameObject = null;
+            m_CachedTransform = null;
+            m_CachedRectTransform = null;
         }
 
-        protected abstract void OnDestroyed();
+        protected abstract void OnDestroyed(UIDestroyArgData argData);
     }
 }
