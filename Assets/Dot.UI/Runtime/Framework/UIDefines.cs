@@ -5,6 +5,10 @@
         public static readonly int DESIGN_SCREEN_WIDTH = 1080;
         public static readonly int DESIGN_SCREEN_HEIGHT = 1920;
 
+        public static readonly string UI_HIERARCHY_NAME_FORMAT = "UI {0} Hierarchy";
+
+        public static readonly string UI_HIERARCHY_DEFAULT = "Default";
+
         public static readonly string UI_LEVEL_NAME_FORMAT = "UI {0} Level";
 
         public static readonly string UI_LEVEL_BACKGROUND = "Background";

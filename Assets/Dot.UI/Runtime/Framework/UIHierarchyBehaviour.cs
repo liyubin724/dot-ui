@@ -9,7 +9,7 @@ namespace DotEngine.UI
     [RequireComponent(typeof(Canvas))]
     [RequireComponent(typeof(CanvasScaler))]
     [RequireComponent(typeof(GraphicRaycaster))]
-    public class UIHierarchy : MonoBehaviour
+    public class UIHierarchyBehaviour : MonoBehaviour
     {
         [SerializeField]
         private string m_Identity;
@@ -49,7 +49,7 @@ namespace DotEngine.UI
         }
 
         [SerializeField]
-        private UILevel[] m_Levels = new UILevel[0];
+        private UILevelBehaviour[] m_Levels = new UILevelBehaviour[0];
 
         [SerializeField]
         [HideInInspector]
@@ -72,7 +72,7 @@ namespace DotEngine.UI
         private GraphicRaycaster m_CachedRaycaster;
 
         [SerializeField]
-        public UICamera m_CachedCamera;
+        public UICameraBehaviour m_CachedCamera;
 
         public GameObject cachedGameObject => m_CachedGameObject;
         public Transform cachedTransform => m_CachedTransform;
@@ -80,9 +80,9 @@ namespace DotEngine.UI
         public Canvas cachedCanvas => m_CachedCanvas;
         public CanvasScaler cachedScaler => m_CachedScaler;
         public GraphicRaycaster cachedRaycaster => m_CachedRaycaster;
-        public UICamera cachedCamera => m_CachedCamera;
+        public UICameraBehaviour cachedCamera => m_CachedCamera;
 
-        private Dictionary<string, UILevel> m_LevelDic = new Dictionary<string, UILevel>();
+        private Dictionary<string, UILevelBehaviour> m_LevelDic = new Dictionary<string, UILevelBehaviour>();
 
         private string[] m_LevelIdentities;
         public string[] levelIdentities => m_LevelIdentities;
@@ -115,7 +115,7 @@ namespace DotEngine.UI
             }
             if (m_CachedCamera == null)
             {
-                m_CachedCamera = cachedGameObject.GetOrAddComponent<UICamera>();
+                m_CachedCamera = cachedGameObject.GetOrAddComponent<UICameraBehaviour>();
             }
 
             var goName = $"UI {m_Identity} Hierarchy";
@@ -162,7 +162,7 @@ namespace DotEngine.UI
             return m_LevelDic.ContainsKey(identity);
         }
 
-        public UILevel GetLevel(string identity)
+        public UILevelBehaviour GetLevel(string identity)
         {
             if (m_LevelDic.TryGetValue(identity, out var level))
             {

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace DotEngine.UI
 {
     [RequireComponent(typeof(Canvas))]
-    public class UILevel : MonoBehaviour
+    public class UILevelBehaviour : MonoBehaviour
     {
         [SerializeField]
         private string m_Identity;

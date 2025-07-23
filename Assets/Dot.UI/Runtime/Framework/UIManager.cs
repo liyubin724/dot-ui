@@ -1,34 +1,12 @@
 ﻿using DotEngine.Core;
-using System.Collections.Generic;
-using SystemObject = System.Object;
 using UnityObject = UnityEngine.Object;
 
 namespace DotEngine.UI
 {
-    public class UIManager
+    public sealed class UIManager : Singleton<UIManager>
     {
-        private static UIManager sm_Instance;
-
-        public static UIManager CreateInstance()
-        {
-            if (sm_Instance == null)
-            {
-                sm_Instance = new UIManager();
-                sm_Instance.OnInitialized();
-            }
-            return sm_Instance;
-        }
-
-        public static UIManager GetInstance()
-        {
-            return sm_Instance;
-        }
-
-        public static void DestroyInstance()
-        {
-            sm_Instance?.OnDestroyed();
-            sm_Instance = null;
-        }
+        private UIRootBehaviour m_Root;
+        public UIRootBehaviour uiRoot => m_Root;
 
         private bool m_InputEnable = true;
         public bool inputEnable
@@ -40,46 +18,25 @@ namespace DotEngine.UI
 
             set
             {
-                if (m_InputEnable != value)
+                if (m_InputEnable == value)
                 {
-                    m_InputEnable = value;
+                    return;
+                }
 
-                    if (uiRoot != null && uiRoot.eventSystem != null)
-                    {
-                        uiRoot.eventSystem.enabled = value;
-                    }
+                m_InputEnable = value;
+                if (uiRoot != null && uiRoot.eventSystem != null)
+                {
+                    uiRoot.eventSystem.enabled = value;
                 }
             }
         }
 
-        public UIRoot uiRoot { get; private set; }
-
-        private Dictionary<string, Dictionary<string, List<UIWindowAgent>>> m_AgentDic = new Dictionary<string, Dictionary<string, List<UIWindowAgent>>>();
-        private Dictionary<string, UIWindowAgent> m_WindowDic = new Dictionary<string, UIWindowAgent>();
-
-        private void OnInitialized()
+        protected override void OnInitialized()
         {
-            uiRoot = UnityObject.FindObjectOfType<UIRoot>();
+            m_Root = UnityObject.FindObjectOfType<UIRootBehaviour>();
             if (uiRoot != null)
             {
                 m_InputEnable = uiRoot.eventSystem.enabled;
-
-                var hierarchyIdentities = uiRoot.hierarchyIdentities;
-                foreach (var hIdentity in hierarchyIdentities)
-                {
-                    var hierarchy = uiRoot.GetHierarchy(hIdentity);
-                    if (hierarchy != null)
-                    {
-                        var agentDic = new Dictionary<string, List<UIWindowAgent>>();
-                        m_AgentDic.Add(hIdentity, agentDic);
-
-                        var sIdentities = hierarchy.levelIdentities;
-                        foreach (var sIdentity in sIdentities)
-                        {
-                            agentDic.Add(sIdentity, new List<UIWindowAgent>());
-                        }
-                    }
-                }
             }
             else
             {
@@ -87,7 +44,7 @@ namespace DotEngine.UI
             }
         }
 
-        public UIHierarchy GetHierarchy(string hierarchyIdentity)
+        public UIHierarchyBehaviour GetHierarchy(string hierarchyIdentity)
         {
             if (uiRoot != null)
             {
@@ -96,51 +53,52 @@ namespace DotEngine.UI
             return null;
         }
 
-        public UILevel GetStage(string hierarchyIdentity, string stageIdentity)
+        public UILevelBehaviour GetLevel(string hierarchyIdentity, string levelIdentity)
         {
             if (uiRoot != null)
             {
-                return uiRoot.GetLevel(hierarchyIdentity, stageIdentity);
+                return uiRoot.GetLevel(hierarchyIdentity, levelIdentity);
             }
             return null;
         }
 
-        public bool HasWindow(string identity)
-        {
-            if (m_WindowDic.TryGetValue(identity, out var agent))
-            {
-                return true;
-            }
 
-            return false;
-        }
+        //public bool HasWindow(string identity)
+        //{
+        //    if (m_WindowDic.TryGetValue(identity, out var agent))
+        //    {
+        //        return true;
+        //    }
 
-        public void OpenWindow(
-            string hierarchy,
-            string stage,
-            string identity,
-            string assetPath,
-            UIWindowMode mode,
-            SystemObject userdata)
-        {
+        //    return false;
+        //}
 
-        }
+        //public void OpenWindow(
+        //    string hierarchy,
+        //    string stage,
+        //    string identity,
+        //    string assetPath,
+        //    UIWindowMode mode,
+        //    SystemObject userdata)
+        //{
 
-        public void CloseWindow(string identity)
-        {
-            if (!m_WindowDic.TryGetValue(identity, out var agent))
-            {
-                return;
-            }
+        //}
 
-            var hierarchyIdentity = agent.hierarchy;
-            var stageIdentity = agent.stage;
+        //public void CloseWindow(string identity)
+        //{
+        //    if (!m_WindowDic.TryGetValue(identity, out var agent))
+        //    {
+        //        return;
+        //    }
 
-        }
+        //    var hierarchyIdentity = agent.hierarchy;
+        //    var stageIdentity = agent.stage;
 
-        private void OnDestroyed()
-        {
-            uiRoot = null;
-        }
+        //}
+
+        //private void OnDestroyed()
+        //{
+        //    uiRoot = null;
+        //}
     }
 }

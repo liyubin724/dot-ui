@@ -8,49 +8,57 @@ namespace DotEditor.UI
 {
     static internal class UIMenuOptions
     {
-        [MenuItem("GameObject/UI/UI Root", false, 900)]
+
+        [MenuItem("GameObject/UI/UI Default Tree", false, 900)]
         static public void AddUIRoot(MenuCommand menuCommand)
         {
-            UIRoot root = CreateDefault();
+            UIRootBehaviour root = CreateDefault();
             Selection.activeObject = root.gameObject;
         }
 
-        [MenuItem("GameObject/UI/UI Hierarchy", false, 901)]
-        static public void AddUIHierarchy()
-        {
-            UIRoot root = null;
-            var activeObject = Selection.activeGameObject;
-            if (activeObject is GameObject go)
-            {
-                root = go.GetComponent<UIRoot>();
-            }
-            if (root == null)
-            {
-                root = FindUIRoot();
-            }
-            var hierarchy = CreateUIHierarchy(root, kUIHierarchyName);
+        //[MenuItem("GameObject/UI/UI Root", false, 900)]
+        //static public void AddUIRoot(MenuCommand menuCommand)
+        //{
+        //    UIRoot root = CreateDefault();
+        //    Selection.activeObject = root.gameObject;
+        //}
 
-            Selection.activeObject = hierarchy.gameObject;
-        }
+        //[MenuItem("GameObject/UI/UI Hierarchy", false, 901)]
+        //static public void AddUIHierarchy()
+        //{
+        //    UIRoot root = null;
+        //    var activeObject = Selection.activeGameObject;
+        //    if (activeObject is GameObject go)
+        //    {
+        //        root = go.GetComponent<UIRoot>();
+        //    }
+        //    if (root == null)
+        //    {
+        //        root = FindUIRoot();
+        //    }
+        //    var hierarchy = CreateUIHierarchy(root);
 
-        [MenuItem("GameObject/UI/UI Stage", false, 902)]
-        static public void AddUIStage()
-        {
-            UIHierarchy hierarchy = null;
+        //    Selection.activeObject = hierarchy.gameObject;
+        //}
 
-            var activeObject = Selection.activeGameObject;
-            if (activeObject is GameObject go)
-            {
-                hierarchy = go.GetComponentInChildren<UIHierarchy>();
-            }
-            if (hierarchy == null)
-            {
-                hierarchy = FindUIHierarchy();
-            }
+        //[MenuItem("GameObject/UI/UI Stage", false, 902)]
+        //static public void AddUIStage()
+        //{
+        //    UIHierarchy hierarchy = null;
 
-            UILevel layer = CreateUILevel(hierarchy, UIDefines.UI_LEVEL_DEFAULT);
-            Selection.activeObject = layer.gameObject;
-        }
+        //    var activeObject = Selection.activeGameObject;
+        //    if (activeObject is GameObject go)
+        //    {
+        //        hierarchy = go.GetComponentInChildren<UIHierarchy>();
+        //    }
+        //    if (hierarchy == null)
+        //    {
+        //        hierarchy = FindUIHierarchy();
+        //    }
+
+        //    UILevel layer = CreateUILevel(hierarchy, UIDefines.UI_LEVEL_DEFAULT);
+        //    Selection.activeObject = layer.gameObject;
+        //}
 
         [MenuItem("GameObject/UI/UI Empty Image", false, 1000)]
         static public void AddEmptyImage(MenuCommand menuCommand)

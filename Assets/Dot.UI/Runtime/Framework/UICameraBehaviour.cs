@@ -3,7 +3,7 @@
 namespace DotEngine.UI
 {
     [RequireComponent(typeof(Camera))]
-    public class UICamera : MonoBehaviour
+    public class UICameraBehaviour : MonoBehaviour
     {
         [SerializeField]
         private Camera m_CachedCamera;

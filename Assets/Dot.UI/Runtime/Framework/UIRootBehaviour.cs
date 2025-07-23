@@ -5,22 +5,22 @@ using UnityEngine.EventSystems;
 
 namespace DotEngine.UI
 {
-    public class UIRoot : MonoBehaviour
+    public class UIRootBehaviour : MonoBehaviour
     {
         [SerializeField]
         private EventSystem m_EventSystem;
         public EventSystem eventSystem => m_EventSystem;
 
         [SerializeField]
-        private UIHierarchy[] m_Hierarchies = new UIHierarchy[0];
+        private UIHierarchyBehaviour[] m_Hierarchies = new UIHierarchyBehaviour[0];
 
-        private Dictionary<string, UIHierarchy> m_HierarchyDic = new Dictionary<string, UIHierarchy>();
+        private Dictionary<string, UIHierarchyBehaviour> m_HierarchyDic = new Dictionary<string, UIHierarchyBehaviour>();
 
         public string[] hierarchyIdentities { get; private set; } = new string[0];
 
         private void Awake()
         {
-            DontDestroyOnLoad(gameObject);
+            DontDestroyHelper.AddGameObject(gameObject);
 
             if (m_Hierarchies != null && m_Hierarchies.Length > 0)
             {
@@ -55,7 +55,7 @@ namespace DotEngine.UI
             return m_HierarchyDic.ContainsKey(identity);
         }
 
-        public UIHierarchy GetHierarchy(string identity)
+        public UIHierarchyBehaviour GetHierarchy(string identity)
         {
             if (m_HierarchyDic.TryGetValue(identity, out var hierarchy))
             {
@@ -67,7 +67,7 @@ namespace DotEngine.UI
 
         public bool HasLevel(string hierarchyIdentity, string levelIdentity)
         {
-            UIHierarchy hierarchy = GetHierarchy(hierarchyIdentity);
+            UIHierarchyBehaviour hierarchy = GetHierarchy(hierarchyIdentity);
             if (hierarchy == null)
             {
                 return false;
@@ -76,9 +76,9 @@ namespace DotEngine.UI
             return hierarchy.HasLevel(levelIdentity);
         }
 
-        public UILevel GetLevel(string hierarchyIdentity, string levelIdentity)
+        public UILevelBehaviour GetLevel(string hierarchyIdentity, string levelIdentity)
         {
-            UIHierarchy hierarchy = GetHierarchy(hierarchyIdentity);
+            UIHierarchyBehaviour hierarchy = GetHierarchy(hierarchyIdentity);
             if (hierarchy == null)
             {
                 return null;

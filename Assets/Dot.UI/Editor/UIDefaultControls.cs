@@ -54,8 +54,6 @@ namespace DotEditor.UI
         public const string kUIRootName = "UI Root";
         public const string kEventSystemName = "EventSystem";
         public const string kUICameraName = "UI Camera";
-        public const string kUIHierarchyName = "UI Hierarchy";
-        public const string kUILayerName = "UI Layer";
 
         public const float kWidth = 160f;
         public const float kThickHeight = 30f;
@@ -67,22 +65,24 @@ namespace DotEditor.UI
         public static Color PanelColor = new Color(1f, 1f, 1f, 0.392f);
         public static Color TextColor = new Color(50f / 255f, 50f / 255f, 50f / 255f, 1f);
 
-        public static UIRoot CreateDefault()
+        public static UIRootBehaviour CreateDefault()
         {
-            var root = CreateUIRoot();
-            var hierarchy = CreateUIHierarchy(root, kUIHierarchyName);
+            var uiRoot = FindUIRoot(true);
+
+            var hierarchy = CreateUIHierarchy(uiRoot);
+
             CreateUILevel(hierarchy, UIDefines.UI_LEVEL_BACKGROUND);
             CreateUILevel(hierarchy, UIDefines.UI_LEVEL_MAIN);
             CreateUILevel(hierarchy, UIDefines.UI_LEVEL_DEFAULT);
             CreateUILevel(hierarchy, UIDefines.UI_LEVEL_POPUP);
             CreateUILevel(hierarchy, UIDefines.UI_LEVEL_OVERLAY);
 
-            return root;
+            return uiRoot;
         }
 
-        public static UIRoot FindUIRoot(bool createIfNot = true)
+        public static UIRootBehaviour FindUIRoot(bool createIfNot = true)
         {
-            var root = UnityObject.FindObjectOfType<UIRoot>();
+            var root = UnityObject.FindObjectOfType<UIRootBehaviour>();
             if (root == null && createIfNot)
             {
                 root = CreateUIRoot();
@@ -90,12 +90,12 @@ namespace DotEditor.UI
             return root;
         }
 
-        public static UIRoot CreateUIRoot()
+        public static UIRootBehaviour CreateUIRoot()
         {
             var rootGo = new GameObject(kUIRootName);
             rootGo.layer = LayerMask.NameToLayer(kLayerName);
 
-            UIRoot root = rootGo.AddComponent<UIRoot>();
+            UIRootBehaviour root = rootGo.AddComponent<UIRootBehaviour>();
 
             var eventSystem = FindEventSystem() ?? CreateEventSystem(rootGo);
             ReflectionUtility.TrySetValue(root, "m_EventSystem", eventSystem);
@@ -139,30 +139,36 @@ namespace DotEditor.UI
             return evtSystem;
         }
 
-        public static UIHierarchy FindUIHierarchy(bool createIfNot = true)
+        public static UIHierarchyBehaviour FindUIHierarchy(bool createIfNot = true)
         {
-            var hierarchy = UnityObject.FindObjectOfType<UIHierarchy>();
+            var hierarchy = UnityObject.FindObjectOfType<UIHierarchyBehaviour>();
             if (hierarchy == null && createIfNot)
             {
                 var root = FindUIRoot();
-                hierarchy = CreateUIHierarchy(root, kUIHierarchyName);
+                hierarchy = CreateUIHierarchy(root);
             }
 
             return hierarchy;
         }
 
-        public static UIHierarchy CreateUIHierarchy(UIRoot root, string name)
+        public static UIHierarchyBehaviour CreateUIHierarchy(UIRootBehaviour root, string name = null)
         {
-            var hierarchyGo = CreateUIObject(name, root.gameObject, typeof(UIHierarchy));
+            if (string.IsNullOrEmpty(name))
+            {
+                name = UIDefines.UI_HIERARCHY_DEFAULT;
+            }
+            var goName = string.Format(UIDefines.UI_HIERARCHY_NAME_FORMAT, UIDefines.UI_HIERARCHY_DEFAULT);
 
-            var hierarchy = hierarchyGo.GetComponent<UIHierarchy>();
+            var hierarchyGo = CreateUIObject(goName, root.gameObject, typeof(UIHierarchyBehaviour));
+
+            var hierarchy = hierarchyGo.GetComponent<UIHierarchyBehaviour>();
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_Identity", name);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_Visible", true);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedGameObject", hierarchyGo);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedTransform", hierarchyGo.transform);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedRectTransform", (RectTransform)hierarchyGo.transform);
 
-            UICamera uiCamera = CreateUICamera(root.gameObject);
+            UICameraBehaviour uiCamera = CreateUICamera(root.gameObject);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedCamera", uiCamera);
 
             var hierarchyCanvas = hierarchyGo.GetComponent<Canvas>();
@@ -182,13 +188,13 @@ namespace DotEditor.UI
 
             if (ReflectionUtility.TryGetFieldValue(root, "m_Hierarchies", out var hierarchies))
             {
-                UIHierarchy[] tHierarchies = (UIHierarchy[])hierarchies;
+                UIHierarchyBehaviour[] tHierarchies = (UIHierarchyBehaviour[])hierarchies;
                 ArrayUtility.Add(ref tHierarchies, hierarchy);
                 ReflectionUtility.TrySetFieldValue(root, "m_Hierarchies", tHierarchies);
             }
             else
             {
-                ReflectionUtility.TrySetFieldValue(root, "m_Hierarchies", new UIHierarchy[1] { hierarchy });
+                ReflectionUtility.TrySetFieldValue(root, "m_Hierarchies", new UIHierarchyBehaviour[1] { hierarchy });
             }
 
             Undo.RegisterCreatedObjectUndo(root, "Add " + hierarchyGo.name);
@@ -196,13 +202,13 @@ namespace DotEditor.UI
             return hierarchy;
         }
 
-        public static UICamera CreateUICamera(GameObject parent)
+        public static UICameraBehaviour CreateUICamera(GameObject parent)
         {
             var uiCameraGO = new GameObject(kUICameraName);
             uiCameraGO.transform.SetParent(parent.transform, false);
             uiCameraGO.layer = parent.layer;
 
-            var uiCamera = uiCameraGO.AddComponent<UICamera>();
+            var uiCamera = uiCameraGO.AddComponent<UICameraBehaviour>();
             var camera = uiCameraGO.GetComponent<Camera>();
             ReflectionUtility.TrySetFieldValue(uiCamera, "m_CachedCamera", camera);
 
@@ -219,9 +225,9 @@ namespace DotEditor.UI
             return uiCamera;
         }
 
-        public static UILevel FindUILevel(bool createIfNot = true)
+        public static UILevelBehaviour FindUILevel(bool createIfNot = true)
         {
-            var uiLevel = UnityObject.FindObjectOfType<UILevel>();
+            var uiLevel = UnityObject.FindObjectOfType<UILevelBehaviour>();
             if (uiLevel == null && createIfNot)
             {
                 var hierarchy = FindUIHierarchy();
@@ -236,7 +242,7 @@ namespace DotEditor.UI
             return uiLevel;
         }
 
-        public static UILevel CreateUILevel(UIHierarchy hierarchy, string identity)
+        public static UILevelBehaviour CreateUILevel(UIHierarchyBehaviour hierarchy, string identity)
         {
             var uiLevel = hierarchy.GetLevel(identity);
             if (uiLevel != null)
@@ -245,9 +251,9 @@ namespace DotEditor.UI
             }
 
             var name = string.Format(UIDefines.UI_LEVEL_NAME_FORMAT, identity);
-            var levelGo = CreateUIObject(name, hierarchy.gameObject, typeof(UILevel));
+            var levelGo = CreateUIObject(name, hierarchy.gameObject, typeof(UILevelBehaviour));
 
-            uiLevel = levelGo.GetComponent<UILevel>();
+            uiLevel = levelGo.GetComponent<UILevelBehaviour>();
             ReflectionUtility.TrySetFieldValue(uiLevel, "m_Identity", identity);
 
             ReflectionUtility.TrySetFieldValue(uiLevel, "m_CachedGameObject", levelGo);
@@ -266,13 +272,13 @@ namespace DotEditor.UI
 
             if (ReflectionUtility.TryGetFieldValue(hierarchy, "m_Levels", out var layers))
             {
-                UILevel[] tLayers = (UILevel[])layers;
+                UILevelBehaviour[] tLayers = (UILevelBehaviour[])layers;
                 ArrayUtility.Add(ref tLayers, uiLevel);
                 ReflectionUtility.TrySetFieldValue(hierarchy, "m_Levels", tLayers);
             }
             else
             {
-                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Levels", new UILevel[1] { uiLevel });
+                ReflectionUtility.TrySetFieldValue(hierarchy, "m_Levels", new UILevelBehaviour[1] { uiLevel });
             }
 
             Undo.RegisterCreatedObjectUndo(hierarchy, "Add " + levelGo.name);
@@ -426,7 +432,7 @@ namespace DotEditor.UI
             if (canvas != null && canvas.gameObject.activeInHierarchy)
                 return canvas.gameObject;
 
-            UILevel layer = FindUILevel(true);
+            UILevelBehaviour layer = FindUILevel(true);
             canvas = layer.GetComponent<Canvas>();
 
             return canvas.gameObject;
