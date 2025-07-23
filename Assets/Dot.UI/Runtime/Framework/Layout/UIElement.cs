@@ -4,29 +4,6 @@ using UnityEngine;
 
 namespace DotEngine.UI
 {
-    public class UIArgData
-    {
-    }
-
-    public class UIInitializeArgData : UIArgData
-    {
-
-    }
-
-    public class UIActivateArgData : UIArgData
-    {
-
-    }
-
-    public class UIDeactivateArgData : UIArgData
-    {
-    }
-
-    public class UIDestroyArgData : UIArgData
-    {
-
-    }
-
     public abstract class UIElement : MonoBehaviour
     {
         [SerializeField]
@@ -132,7 +109,7 @@ namespace DotEngine.UI
         protected Transform cachedTransform => m_CachedTransform;
         protected RectTransform cachedRectTransform => m_CachedRectTransform;
 
-        public virtual void Initialize(UIInitializeArgData argData)
+        public virtual void Initialize()
         {
             if (isInited)
             {
@@ -146,12 +123,12 @@ namespace DotEngine.UI
 
             m_IsInited = true;
 
-            OnInitialized(argData);
+            OnInitialized();
         }
 
-        protected abstract void OnInitialized(UIInitializeArgData argData);
+        protected abstract void OnInitialized();
 
-        public virtual void Activate(UIActivateArgData argData)
+        public virtual void Activate()
         {
             if (!m_IsInited)
             {
@@ -166,12 +143,12 @@ namespace DotEngine.UI
 
             m_IsActived = true;
 
-            OnActivated(argData);
+            OnActivated();
         }
 
-        protected abstract void OnActivated(UIActivateArgData argData);
+        protected abstract void OnActivated();
 
-        public virtual void Deactivate(UIDeactivateArgData argData)
+        public virtual void Deactivate()
         {
             if (!m_IsInited)
             {
@@ -186,12 +163,12 @@ namespace DotEngine.UI
 
             m_IsActived = false;
 
-            OnDeactivated(argData);
+            OnDeactivated();
         }
 
-        protected abstract void OnDeactivated(UIDeactivateArgData argData);
+        protected abstract void OnDeactivated();
 
-        public virtual void Destroy(UIDestroyArgData argData)
+        public virtual void Destroy()
         {
             if (!m_IsInited)
             {
@@ -199,7 +176,7 @@ namespace DotEngine.UI
                 return;
             }
 
-            OnDestroyed(argData);
+            OnDestroyed();
             m_IsInited = false;
 
             m_CachedGameObject = null;
@@ -207,6 +184,6 @@ namespace DotEngine.UI
             m_CachedRectTransform = null;
         }
 
-        protected abstract void OnDestroyed(UIDestroyArgData argData);
+        protected abstract void OnDestroyed();
     }
 }

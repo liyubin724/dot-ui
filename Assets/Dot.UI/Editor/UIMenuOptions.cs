@@ -48,7 +48,7 @@ namespace DotEditor.UI
                 hierarchy = FindUIHierarchy();
             }
 
-            UIStage layer = CreateUIStage(hierarchy, UIDefines.UI_STAGE_DEFAULT);
+            UILevel layer = CreateUILevel(hierarchy, UIDefines.UI_LEVEL_DEFAULT);
             Selection.activeObject = layer.gameObject;
         }
 

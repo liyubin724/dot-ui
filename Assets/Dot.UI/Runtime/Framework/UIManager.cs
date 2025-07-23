@@ -73,7 +73,7 @@ namespace DotEngine.UI
                         var agentDic = new Dictionary<string, List<UIWindowAgent>>();
                         m_AgentDic.Add(hIdentity, agentDic);
 
-                        var sIdentities = hierarchy.stageIdentities;
+                        var sIdentities = hierarchy.levelIdentities;
                         foreach (var sIdentity in sIdentities)
                         {
                             agentDic.Add(sIdentity, new List<UIWindowAgent>());
@@ -96,11 +96,11 @@ namespace DotEngine.UI
             return null;
         }
 
-        public UIStage GetStage(string hierarchyIdentity, string stageIdentity)
+        public UILevel GetStage(string hierarchyIdentity, string stageIdentity)
         {
             if (uiRoot != null)
             {
-                return uiRoot.GetStage(hierarchyIdentity, stageIdentity);
+                return uiRoot.GetLevel(hierarchyIdentity, stageIdentity);
             }
             return null;
         }

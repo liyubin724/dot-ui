@@ -33,7 +33,14 @@ namespace DotEngine.UI
                         hierarchy.Initialize();
 
                         hierarchyIdentities[i] = hierarchy.identity;
-                        m_HierarchyDic.Add(hierarchy.identity, hierarchy);
+                        if (!m_HierarchyDic.ContainsKey(hierarchy.identity))
+                        {
+                            m_HierarchyDic.Add(hierarchy.identity, hierarchy);
+                        }
+                        else
+                        {
+                            DLogger.ErrorWithFormat("The identity({0}) of hierarchy is exist", hierarchy.identity);
+                        }
                     }
                     else
                     {
@@ -58,7 +65,7 @@ namespace DotEngine.UI
             return null;
         }
 
-        public bool HasStage(string hierarchyIdentity, string stageIdentity)
+        public bool HasLevel(string hierarchyIdentity, string levelIdentity)
         {
             UIHierarchy hierarchy = GetHierarchy(hierarchyIdentity);
             if (hierarchy == null)
@@ -66,10 +73,10 @@ namespace DotEngine.UI
                 return false;
             }
 
-            return hierarchy.HasStage(stageIdentity);
+            return hierarchy.HasLevel(levelIdentity);
         }
 
-        public UIStage GetStage(string hierarchyIdentity, string stageIdentity)
+        public UILevel GetLevel(string hierarchyIdentity, string levelIdentity)
         {
             UIHierarchy hierarchy = GetHierarchy(hierarchyIdentity);
             if (hierarchy == null)
@@ -77,7 +84,7 @@ namespace DotEngine.UI
                 return null;
             }
 
-            return hierarchy.GetStage(stageIdentity);
+            return hierarchy.GetLevel(levelIdentity);
         }
     }
 }
