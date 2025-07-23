@@ -53,34 +53,34 @@ namespace DotEngine.UI
 
         [SerializeField]
         [HideInInspector]
-        private GameObject m_GameObject;
+        private GameObject m_CachedGameObject;
         [SerializeField]
         [HideInInspector]
-        private Transform m_Transform;
+        private Transform m_CachedTransform;
         [SerializeField]
         [HideInInspector]
-        private RectTransform m_RectTransform;
+        private RectTransform m_CachedRectTransform;
 
         [SerializeField]
         [HideInInspector]
-        private Canvas m_Canvas;
+        private Canvas m_CachedCanvas;
         [SerializeField]
         [HideInInspector]
-        private CanvasScaler m_Scaler;
+        private CanvasScaler m_CachedScaler;
         [SerializeField]
         [HideInInspector]
-        private GraphicRaycaster m_Raycaster;
+        private GraphicRaycaster m_CachedRaycaster;
 
         [SerializeField]
-        public UICamera m_UICamera;
+        public UICamera m_CachedCamera;
 
-        public GameObject cachedGameObject => m_GameObject;
-        public Transform cachedTransform => m_Transform;
-        public RectTransform cachedRectTransform => m_RectTransform;
-        public Canvas cachedCanvas => m_Canvas;
-        public CanvasScaler cachedScaler => m_Scaler;
-        public GraphicRaycaster cachedRaycaster => m_Raycaster;
-        public UICamera cachedCamera => m_UICamera;
+        public GameObject cachedGameObject => m_CachedGameObject;
+        public Transform cachedTransform => m_CachedTransform;
+        public RectTransform cachedRectTransform => m_CachedRectTransform;
+        public Canvas cachedCanvas => m_CachedCanvas;
+        public CanvasScaler cachedScaler => m_CachedScaler;
+        public GraphicRaycaster cachedRaycaster => m_CachedRaycaster;
+        public UICamera cachedCamera => m_CachedCamera;
 
         private Dictionary<string, UILevel> m_LevelDic = new Dictionary<string, UILevel>();
 
@@ -89,33 +89,33 @@ namespace DotEngine.UI
 
         public void Initialize()
         {
-            if (m_GameObject == null)
+            if (m_CachedGameObject == null)
             {
-                m_GameObject = gameObject;
+                m_CachedGameObject = gameObject;
             }
-            if (m_Transform == null)
+            if (m_CachedTransform == null)
             {
-                m_Transform = transform;
+                m_CachedTransform = transform;
             }
-            if (m_RectTransform == null)
+            if (m_CachedRectTransform == null)
             {
-                m_RectTransform = (RectTransform)transform;
+                m_CachedRectTransform = (RectTransform)transform;
             }
-            if (m_Canvas == null)
+            if (m_CachedCanvas == null)
             {
-                m_Canvas = cachedGameObject.GetOrAddComponent<Canvas>();
+                m_CachedCanvas = cachedGameObject.GetOrAddComponent<Canvas>();
             }
-            if (m_Scaler == null)
+            if (m_CachedScaler == null)
             {
-                m_Scaler = cachedGameObject.GetOrAddComponent<CanvasScaler>();
+                m_CachedScaler = cachedGameObject.GetOrAddComponent<CanvasScaler>();
             }
-            if (m_Raycaster == null)
+            if (m_CachedRaycaster == null)
             {
-                m_Raycaster = cachedGameObject.GetOrAddComponent<GraphicRaycaster>();
+                m_CachedRaycaster = cachedGameObject.GetOrAddComponent<GraphicRaycaster>();
             }
-            if (m_UICamera == null)
+            if (m_CachedCamera == null)
             {
-                m_UICamera = cachedGameObject.GetOrAddComponent<UICamera>();
+                m_CachedCamera = cachedGameObject.GetOrAddComponent<UICamera>();
             }
 
             var goName = $"UI {m_Identity} Hierarchy";

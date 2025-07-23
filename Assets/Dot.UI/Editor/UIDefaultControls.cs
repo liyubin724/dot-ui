@@ -153,30 +153,30 @@ namespace DotEditor.UI
 
         public static UIHierarchy CreateUIHierarchy(UIRoot root, string name)
         {
-            var hierarchyGo = CreateUIObject(name, root.gameObject, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(UIHierarchy));
+            var hierarchyGo = CreateUIObject(name, root.gameObject, typeof(UIHierarchy));
 
             var hierarchy = hierarchyGo.GetComponent<UIHierarchy>();
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_Identity", name);
             ReflectionUtility.TrySetFieldValue(hierarchy, "m_Visible", true);
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_GameObject", hierarchyGo);
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Transform", hierarchyGo.transform);
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_RectTransform", (RectTransform)hierarchyGo.transform);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedGameObject", hierarchyGo);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedTransform", hierarchyGo.transform);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedRectTransform", (RectTransform)hierarchyGo.transform);
 
             UICamera uiCamera = CreateUICamera(root.gameObject);
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_UICamera", uiCamera);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedCamera", uiCamera);
 
             var hierarchyCanvas = hierarchyGo.GetComponent<Canvas>();
             hierarchyCanvas.renderMode = RenderMode.ScreenSpaceCamera;
             hierarchyCanvas.worldCamera = uiCamera.GetComponent<Camera>();
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Canvas", hierarchyCanvas);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedCanvas", hierarchyCanvas);
 
             var canvasScaler = hierarchyGo.GetComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             canvasScaler.referenceResolution = new Vector2(UIDefines.DESIGN_SCREEN_WIDTH, UIDefines.DESIGN_SCREEN_HEIGHT);
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Scaler", canvasScaler);
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedScaler", canvasScaler);
 
-            ReflectionUtility.TrySetFieldValue(hierarchy, "m_Raycaster", hierarchyGo.GetComponent<GraphicRaycaster>());
+            ReflectionUtility.TrySetFieldValue(hierarchy, "m_CachedRaycaster", hierarchyGo.GetComponent<GraphicRaycaster>());
 
             Undo.RegisterCreatedObjectUndo(hierarchyGo, "Create " + hierarchyGo.name);
 
@@ -202,7 +202,10 @@ namespace DotEditor.UI
             uiCameraGO.transform.SetParent(parent.transform, false);
             uiCameraGO.layer = parent.layer;
 
-            var camera = uiCameraGO.AddComponent<Camera>();
+            var uiCamera = uiCameraGO.AddComponent<UICamera>();
+            var camera = uiCameraGO.GetComponent<Camera>();
+            ReflectionUtility.TrySetFieldValue(uiCamera, "m_CachedCamera", camera);
+
             camera.clearFlags = CameraClearFlags.Depth;
             camera.cullingMask = 1 << parent.layer;
             camera.orthographic = true;
@@ -210,8 +213,6 @@ namespace DotEditor.UI
             camera.nearClipPlane = -1;
             camera.farClipPlane = 1000;
 
-            var uiCamera = uiCameraGO.AddComponent<UICamera>();
-            ReflectionUtility.TrySetFieldValue(uiCamera, "m_CachedCamera", camera);
 
             Undo.RegisterCreatedObjectUndo(uiCameraGO, "Create " + uiCameraGO.name);
 
@@ -244,14 +245,14 @@ namespace DotEditor.UI
             }
 
             var name = string.Format(UIDefines.UI_LEVEL_NAME_FORMAT, identity);
-            var levelGo = CreateUIObject(name, hierarchy.gameObject, typeof(Canvas), typeof(UILevel));
+            var levelGo = CreateUIObject(name, hierarchy.gameObject, typeof(UILevel));
 
             uiLevel = levelGo.GetComponent<UILevel>();
             ReflectionUtility.TrySetFieldValue(uiLevel, "m_Identity", identity);
 
-            ReflectionUtility.TrySetFieldValue(uiLevel, "m_GameObject", levelGo);
-            ReflectionUtility.TrySetFieldValue(uiLevel, "m_Transform", levelGo.transform);
-            ReflectionUtility.TrySetFieldValue(uiLevel, "m_RectTransform", (RectTransform)levelGo.transform);
+            ReflectionUtility.TrySetFieldValue(uiLevel, "m_CachedGameObject", levelGo);
+            ReflectionUtility.TrySetFieldValue(uiLevel, "m_CachedTransform", levelGo.transform);
+            ReflectionUtility.TrySetFieldValue(uiLevel, "m_CachedRectTransform", (RectTransform)levelGo.transform);
 
             var canvas = levelGo.GetComponent<Canvas>();
             var canvasTransform = (RectTransform)canvas.transform;
@@ -259,7 +260,7 @@ namespace DotEditor.UI
             canvasTransform.anchorMax = Vector2.one;
             canvasTransform.offsetMin = Vector2.zero;
             canvasTransform.offsetMax = Vector2.zero;
-            ReflectionUtility.TrySetFieldValue(uiLevel, "m_Canvas", canvas);
+            ReflectionUtility.TrySetFieldValue(uiLevel, "m_CachedCanvas", canvas);
 
             Undo.RegisterCreatedObjectUndo(levelGo, "Create " + levelGo.name);
 

@@ -42,39 +42,39 @@ namespace DotEngine.UI
 
         [SerializeField]
         [HideInInspector]
-        private GameObject m_GameObject;
+        private GameObject m_CachedGameObject;
         [SerializeField]
         [HideInInspector]
-        private Transform m_Transform;
+        private Transform m_CachedTransform;
         [SerializeField]
         [HideInInspector]
-        private RectTransform m_RectTransform;
+        private RectTransform m_CachedRectTransform;
         [SerializeField]
         [HideInInspector]
-        private Canvas m_Canvas;
+        private Canvas m_CachedCanvas;
 
-        public GameObject cachedGameObject => m_GameObject;
-        public Transform cachedTransform => m_Transform;
-        public RectTransform cachedRectTransform => m_RectTransform;
-        public Canvas cachedCanvas => m_Canvas;
+        public GameObject cachedGameObject => m_CachedGameObject;
+        public Transform cachedTransform => m_CachedTransform;
+        public RectTransform cachedRectTransform => m_CachedRectTransform;
+        public Canvas cachedCanvas => m_CachedCanvas;
 
         public void Initialize()
         {
-            if (m_GameObject == null)
+            if (m_CachedGameObject == null)
             {
-                m_GameObject = gameObject;
+                m_CachedGameObject = gameObject;
             }
-            if (m_Transform == null)
+            if (m_CachedTransform == null)
             {
-                m_Transform = transform;
+                m_CachedTransform = transform;
             }
-            if (m_RectTransform == null)
+            if (m_CachedRectTransform == null)
             {
-                m_RectTransform = (RectTransform)transform;
+                m_CachedRectTransform = (RectTransform)transform;
             }
-            if (m_Canvas == null)
+            if (m_CachedCanvas == null)
             {
-                m_Canvas = cachedGameObject.GetOrAddComponent<Canvas>();
+                m_CachedCanvas = cachedGameObject.GetOrAddComponent<Canvas>();
             }
 
             var goName = string.Format(UIDefines.UI_LEVEL_NAME_FORMAT, m_Identity);
